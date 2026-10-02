@@ -1,311 +1,83 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitHub 个人主页</title>
-
-  <link rel="preconnect" href="https://api.github.com" crossorigin>
-  <link rel="preconnect" href="https://avatars.githubusercontent.com" crossorigin>
-
-  <style>
-    :root {
-      --bg: #0b0e14;
-      --fg: #e7ecf3;
-      --mu: #94a3b8;
-      --ac: #5eead4;
-      --ac2: #818cf8;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font: 16px/1.75 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .wrap {
-      max-width: 920px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    header {
-      padding: 80px 0 44px;
-    }
-
-    .avatar {
-      width: 104px;
-      height: 104px;
-      border-radius: 50%;
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-      font-size: 42px;
-      font-weight: 700;
-      color: var(--bg);
-      background: linear-gradient(135deg, var(--ac), var(--ac2));
-      margin-bottom: 22px;
-    }
-
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 5vw, 40px);
-      background: linear-gradient(100deg, var(--fg) 20%, var(--ac));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .tagline {
-      margin: 0 0 22px;
-      color: var(--mu);
-    }
-
-    .btn {
-      display: inline-flex;
-      padding: 9px 18px;
-      margin: 0 10px 0 0;
-      border-radius: 999px;
-      font-size: 14px;
-      color: var(--fg);
-      text-decoration: none;
-      background: #ffffff09;
-      border: 1px solid #ffffff17;
-    }
-
-    .btn:hover {
-      border-color: var(--ac);
-    }
-
-    section {
-      padding: 40px 0;
-      border-top: 1px solid #ffffff17;
-    }
-
-    h2 {
-      margin: 0 0 18px;
-      font-size: 19px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      border-radius: 16px;
-      background: #ffffff09;
-      border: 1px solid #ffffff17;
-      text-decoration: none;
-      color: inherit;
-      transition: transform .2s;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: var(--ac);
-    }
-
-    .card h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-
-    .card p {
-      margin: 0 0 14px;
-      font-size: 14px;
-      color: var(--mu);
-      flex: 1;
-    }
-
-    .meta {
-      display: flex;
-      gap: 14px;
-      font-size: 12px;
-      color: var(--mu);
-    }
-
-    .dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--c, #8b949e);
-      margin-right: 6px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 36px;
-      flex-wrap: wrap;
-    }
-
-    .stats b {
-      display: block;
-      font-size: 30px;
-      background: linear-gradient(100deg, var(--ac), var(--ac2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .stats span {
-      font-size: 13px;
-      color: var(--mu);
-    }
-
-    footer {
-      padding: 34px 0 56px;
-      color: var(--mu);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    .note {
-      color: var(--mu);
-      font-size: 13px;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zssx-2026</title>
+<meta name="description" content="The Infinity suite: five Windows applications that need nothing but Windows. Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager.">
+<link rel="stylesheet" href="./infinity/assets/site.css">
+<style>
+  /* Only what the root page needs and no other page does. Everything else
+     comes from the shared stylesheet so the front door and the rooms behind
+     it look like the same building. */
+  .hero { padding: 48px 0 8px; }
+  .hero h1 { font-size: 44px; letter-spacing: -.02em; margin-bottom: 12px; }
+  .hero .lede { font-size: 19px; max-width: 60ch; }
+  .hero .row { margin-top: 26px; }
+  .stack { margin-top: 44px; }
+  .suite { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  @media (max-width: 640px) { .hero h1 { font-size: 32px; } }
+</style>
 </head>
-
 <body>
-  <div class="wrap" id="app"></div>
+<main id="app">
+  <section class="hero">
+    <h1>Infinity.Inc</h1>
+    <p class="lede">Five Windows applications that need nothing but Windows. Each one is a single
+    self-contained executable of a few hundred kilobytes — no runtime, no framework, no DLL to
+    install beside it.</p>
+    <div class="row">
+      <a class="btn" href="./infinity/">Open the site</a>
+      <a class="btn ghost" href="./infinity/download/">Download</a>
+      <a class="btn ghost" href="./infinity/docs/">Documentation</a>
+    </div>
+  </section>
 
-  <script>
-    (async () => {
-      // 配置位于文件末尾，先等文档解析完成再读取
-      await new Promise(resolve => {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', resolve, { once: true });
-        } else {
-          resolve();
-        }
-      });
+  <section class="stack">
+    <h2>The suite</h2>
+    <div class="suite" id="suite"></div>
+  </section>
 
-      const cfg = JSON.parse(document.getElementById('cfg').textContent);
-      const user = cfg.user;
-      const api = 'https://api.github.com/users/' + encodeURIComponent(user);
-      const root = document.getElementById('app');
+  <section class="stack">
+    <h2>Where to start</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>If you want everything</h3>
+        <p class="muted">Install
+        <a href="./infinity/download/infinityinstallmanager/">Infinity Installer Manager</a>.
+        It is the single entry point: one catalogue covering the products, the plugins they drive
+        and the resource packs they load.</p>
+      </div>
+      <div class="card">
+        <h3>If you want one thing</h3>
+        <p class="muted">Every product installs on its own. Pick it from
+        <a href="./infinity/download/">the download page</a> and ignore the rest.</p>
+      </div>
+      <div class="card">
+        <h3>If you want to read first</h3>
+        <p class="muted">The <a href="./infinity/docs/">documentation</a> is the project's own
+        files, rendered as they are — what is written there is what the code says.</p>
+      </div>
+    </div>
+  </section>
+</main>
 
-      const el = (tag, attrs, ...kids) => {
-        const node = document.createElement(tag);
-        for (const key in attrs) node.setAttribute(key, attrs[key]);
-        kids.flat().forEach(kid => kid && node.append(kid));
-        return node;
-      };
+<script src="./infinity/assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/');
+  I.footer();
 
-      const txt = text => document.createTextNode(text);
-
-      const ago = date => {
-        const sec = (Date.now() - Date.parse(date)) / 1e3;
-        if (sec < 3600) return Math.max(1, sec / 60 | 0) + ' 分钟前';
-        if (sec < 86400) return (sec / 3600 | 0) + ' 小时前';
-        if (sec < 2592e3) return (sec / 86400 | 0) + ' 天前';
-        return (sec / 2592e3 | 0) + ' 个月前';
-      };
-
-      const get = url => fetch(url, { headers: { Accept: 'application/vnd.github+json' } })
-        .then(res => res.ok ? res.json() : null)
-        .catch(() => null);
-
-      function render(me, repos, events) {
-        me = me || {};
-        repos = repos || [];
-        events = events || [];
-
-        const name = me.name || me.login || user;
-
-        const list = repos
-          .filter(r => r && !r.fork && !r.archived && r.name !== user + '.github.io')
-          .slice(0, 12);
-
-        const commits = events.reduce(
-          (sum, e) => sum + (e.type === 'PushEvent' ? (e.payload.commits || []).length : 0), 0);
-
-        const stats = [
-          ['近期提交', commits],
-          ['公开仓库', me.public_repos != null ? me.public_repos : list.length],
-          ['关注者', me.followers != null ? me.followers : '—'],
-          ['关注中', me.following != null ? me.following : '—']
-        ];
-
-        document.title = name;
-        root.textContent = '';
-
-        root.append(el('header', {},
-          el('div', { class: 'avatar' }, me.avatar_url
-            ? el('img', { src: me.avatar_url, alt: '', width: 104, height: 104 })
-            : txt(name[0].toUpperCase())),
-          el('h1', {}, txt(name)),
-          me.bio && el('p', { class: 'tagline' }, txt(me.bio)),
-          el('div', {},
-            el('a', { class: 'btn', href: me.html_url || 'https://github.com/' + user }, txt('GitHub')),
-            me.blog && el('a', { class: 'btn', href: me.blog }, txt('博客')),
-            me.email && el('a', { class: 'btn', href: 'mailto:' + me.email }, txt('邮箱'))
-          )
-        ));
-
-        root.append(el('section', {},
-          el('h2', {}, txt('项目')),
-          list.length
-            ? el('div', { class: 'grid' }, list.map(r => el('a', { class: 'card', href: r.html_url },
-                el('h3', {}, txt(r.name)),
-                el('p', {}, txt(r.description || '')),
-                el('div', { class: 'meta' },
-                  r.language && el('span', {},
-                    el('i', { class: 'dot', style: '--c:' + (r.language === 'JavaScript' ? '#f1e05a' : '#8b949e') }),
-                    txt(r.language)),
-                  el('span', {}, txt('★' + (r.stargazers_count || 0))),
-                  r.pushed_at && el('span', {}, txt(ago(r.pushed_at)))
-                )
-              )))
-            : el('p', { class: 'note' }, txt('暂时取不到仓库列表，稍后刷新即可。'))
-        ));
-
-        root.append(el('section', {},
-          el('h2', {}, txt('数据')),
-          el('div', { class: 'stats' }, stats.map(([label, value]) =>
-            el('div', {}, el('b', {}, txt(value)), el('span', {}, txt(label)))))
-        ));
-
-        root.append(el('footer', {},
-          txt('© ' + new Date().getFullYear() + ' ' + user + ' · 数据来自 api.github.com')));
-      }
-
-      const [me, repos, events] = await Promise.all([
-        get(api),
-        get(api + '/repos?per_page=100&sort=pushed'),
-        get(api + '/events/public')
-      ]);
-
-      if (me || repos) {
-        render(me, repos, events);
-      } else {
-        root.append(el('section', {},
-          el('h1', {}, txt(user)),
-          el('p', { class: 'note' }, txt(
-            'api.github.com 暂时无法访问（可能被网络策略、插件拦截或触发速率限制）。' +
-            '请稍后刷新，或直接用浏览器打开 https://github.com/' + user + ' 查看。'))
-        ));
-      }
-    })();
-  </script>
-  <script id="cfg" type="application/json">
-    { "user": "zssx-2026" }
-  </script>
+  var suite = document.getElementById('suite');
+  I.PRODUCTS.forEach(function (p) {
+    suite.appendChild(I.el('a', { class: 'product', href: './infinity/download/' + p.slug + '/' }, [
+      I.el('div', { class: 'tag', text: p.short }),
+      I.el('h3', { text: p.name }),
+      I.el('p', { text: p.tagline })
+    ]));
+  });
+})();
+</script>
 </body>
 </html>

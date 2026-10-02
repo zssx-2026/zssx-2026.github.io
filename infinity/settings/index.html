@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — Infinity.Inc</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:680px">
+  <h1>Settings</h1>
+  <p class="lede">These are the preferences of this website in this browser. The desktop
+  programs keep their own, and they are not shared — there is no account for them to be stored
+  against.</p>
+
+  <div class="card">
+    <h3>Downloads</h3>
+    <div class="field">
+      <label for="downloadPlatform">Platform to offer first</label>
+      <select id="downloadPlatform">
+        <option value="win64">Windows x64</option>
+        <option value="winx86">Windows x86</option>
+        <option value="win-arm64">Windows on ARM</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="showPrerelease">Show pre-releases</label>
+      <select id="showPrerelease">
+        <option value="true">Yes</option>
+        <option value="false">No, only stable releases</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Appearance</h3>
+    <div class="field">
+      <label for="theme">Theme</label>
+      <select id="theme">
+        <option value="dark">Dark</option>
+        <option value="light">Light (not implemented yet)</option>
+      </select>
+      <p class="small faint" style="margin:6px 0 0">
+        The light theme is listed but not built. Rather than pretend, choosing it keeps the dark
+        one and says so here.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Credential</h3>
+    <div id="cred"></div>
+  </div>
+
+  <div class="card">
+    <h3>Saved requests</h3>
+    <p class="muted small">Run requests this browser has been handed, newest last. A desktop
+    program collects them when it starts.</p>
+    <div id="pending"></div>
+  </div>
+
+  <div class="card">
+    <h3>Reset</h3>
+    <p class="muted small">Clears every preference and every saved request in this browser. It
+    does not touch your GitHub account or any repository.</p>
+    <button class="btn ghost" id="reset">Clear this browser's data</button>
+    <div id="resetResult" style="margin-top:12px"></div>
+  </div>
+</main>
+
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/settings/');
+  I.footer();
+
+  var s = I.settings();
+
+  function bind(id, key, transform) {
+    var node = document.getElementById(id);
+    node.value = String(s[key]);
+    node.addEventListener('change', function () {
+      var value = transform ? transform(node.value) : node.value;
+      s = I.saveSettings({});
+      var next = {};
+      next[key] = value;
+      I.saveSettings(next);
+      s = I.settings();
+    });
+  }
+
+  bind('downloadPlatform', 'downloadPlatform');
+  bind('showPrerelease', 'showPrerelease', function (v) { return v === 'true'; });
+  bind('theme', 'theme');
+
+  // ---------------------------------------------------------------- credential
+  var cred = document.getElementById('cred');
+  function renderCred() {
+    I.clear(cred);
+    if (!I.token()) {
+      cred.appendChild(I.el('p', { class: 'muted', text: 'No token in this browser.' }));
+      cred.appendChild(I.el('a', { class: 'btn ghost', href: I.page('/login/') }, ['Sign in']));
+      return;
+    }
+    cred.appendChild(I.el('p', { class: 'muted', text:
+      'A token is stored in this browser and sent only to api.github.com.' }));
+    var masked = I.el('p', { class: 'mono small faint', text: '••••••••  (' + I.token().length + ' characters)' });
+    cred.appendChild(masked);
+    var row = I.el('div', { class: 'row' });
+    var check = I.el('button', { class: 'btn ghost small' }, ['Check it']);
+    var result = I.el('span', { class: 'small muted' });
+    check.addEventListener('click', function () {
+      result.textContent = 'checking…';
+      I.verify().then(function (u) {
+        result.textContent = u ? 'valid, signed in as ' + u.login : 'no account returned';
+      }).catch(function (e) {
+        result.textContent = 'rejected: ' + e.message;
+      });
+    });
+    row.appendChild(check);
+    row.appendChild(result);
+    cred.appendChild(row);
+  }
+  renderCred();
+
+  // ---------------------------------------------------------------- pending
+  var pendingHost = document.getElementById('pending');
+  function renderPending() {
+    I.clear(pendingHost);
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('infinity.pending') || '[]'); } catch (e) { list = []; }
+    if (!list.length) {
+      pendingHost.appendChild(I.el('div', { class: 'empty', text: 'Nothing saved.' }));
+      return;
+    }
+    var table = I.el('table');
+    table.appendChild(I.el('thead', null, [I.el('tr', null, [
+      I.el('th', { text: 'Run id' }), I.el('th', { text: 'Saved' }), I.el('th')
+    ])]));
+    var tb = I.el('tbody');
+    list.forEach(function (item, index) {
+      var row = I.el('tr');
+      row.appendChild(I.el('td', { class: 'mono small', text: item.id }));
+      row.appendChild(I.el('td', { class: 'muted small', text: I.fmtDate(new Date(item.at).toISOString()) }));
+      var cell = I.el('td');
+      var del = I.el('button', { class: 'btn ghost small', text: 'Forget' });
+      del.addEventListener('click', function () {
+        list.splice(index, 1);
+        localStorage.setItem('infinity.pending', JSON.stringify(list));
+        renderPending();
+      });
+      cell.appendChild(del);
+      row.appendChild(cell);
+      tb.appendChild(row);
+    });
+    table.appendChild(tb);
+    pendingHost.appendChild(table);
+  }
+  renderPending();
+
+  // ---------------------------------------------------------------- reset
+  var resetResult = document.getElementById('resetResult');
+  document.getElementById('reset').addEventListener('click', function () {
+    try {
+      localStorage.removeItem('infinity.settings');
+      localStorage.removeItem('infinity.pending');
+    } catch (e) { /* nothing to do if the store is unavailable */ }
+    I.clear(resetResult);
+    resetResult.appendChild(I.el('div', { class: 'note', text:
+      'Cleared. The token was left alone — sign out from the account page if you want it gone.' }));
+    s = I.settings();
+    renderPending();
+  });
+})();
+</script>
+</body>
+</html>

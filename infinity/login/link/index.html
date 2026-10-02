@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link a product — Infinity.Inc</title>
+<link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:640px">
+  <h1>Link a product</h1>
+  <p class="lede">A desktop program opens this page to hand over a request: it puts a small
+  payload in the address, this page shows it back, and once you are signed in it passes you to
+  the matching run page.</p>
+
+  <div class="card" id="payload">
+    <h3>The request</h3>
+    <div id="body"></div>
+  </div>
+
+  <div class="card" id="actions">
+    <h3>What happens next</h3>
+    <div id="next"></div>
+  </div>
+</main>
+
+<script src="../../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/login/link/');
+  I.footer();
+
+  var body = document.getElementById('body');
+  var next = document.getElementById('next');
+
+  /*
+   * The route is /login/link/<linkid>?="<base64>". The id is the last path
+   * segment and the payload is the query, which arrives still wrapped in
+   * quotes because that is how the desktop program writes it.
+   */
+  var parts = location.pathname.replace(/\/+$/, '').split('/');
+  var linkId = parts[parts.length - 1] === 'link' ? '' : parts[parts.length - 1];
+  var raw = location.search.replace(/^\?/, '');
+  var decoded = I.decodePayload(raw);
+
+  function row(label, value, mono) {
+    var line = I.el('div', { class: 'row', style: 'margin:4px 0' });
+    line.appendChild(I.el('span', { class: 'small muted', style: 'min-width:110px', text: label }));
+    line.appendChild(I.el('span', { class: mono ? 'mono small' : '', text: value || '—' }));
+    return line;
+  }
+
+  I.clear(body);
+  body.appendChild(row('Link id', linkId || '(none)', true));
+  body.appendChild(row('Payload', decoded ? decoded.slice(0, 400) : '(could not be decoded)', true));
+  if (decoded.length > 400) {
+    body.appendChild(I.el('p', { class: 'small faint', text:
+      'Showing the first 400 characters of ' + decoded.length + '.' }));
+  }
+
+  I.clear(next);
+
+  if (!decoded && !linkId) {
+    next.appendChild(I.el('div', { class: 'note warn', text:
+      'There is no request in this address. A program opens this page with an id and a payload; ' +
+      'opened by hand it has neither.' }));
+    next.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'Downloads')]));
+    return;
+  }
+
+  if (!I.token()) {
+    next.appendChild(I.el('div', { class: 'note', text:
+      'Sign in first, and this page will continue to the run page for this request.' }));
+    var toLogin = I.el('a', {
+      class: 'btn',
+      href: I.page('/login/') + '?next=' + encodeURIComponent(location.pathname + location.search)
+    }, ['Sign in and continue']);
+    next.appendChild(toLogin);
+  } else {
+    var toRun = I.el('a', {
+      class: 'btn',
+      href: I.page('/run/') + encodeURIComponent(linkId) + '/?=' + encodeURIComponent(raw)
+    }, ['Continue to the run page']);
+    next.appendChild(toRun);
+    next.appendChild(I.el('p', { class: 'small muted', style: 'margin-top:12px' }, [
+      'Signed in as ' + (I.user() ? I.user().login : 'this browser') + '. ',
+      'The run page shows what the request is for before anything happens.'
+    ]));
+  }
+
+  // Being signed in already is the common case when a program reopens this
+  // page, so the user name is filled in rather than left blank.
+  I.verify().catch(function () { I.signOut(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Infinity.Inc</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:520px">
+  <h1>Sign in</h1>
+  <p class="lede">This site has no accounts of its own. Signing in means handing it a GitHub
+  personal access token, which it keeps in this browser and uses to read the repositories the
+  suite stores its data in.</p>
+
+  <div class="card" id="form">
+    <div class="field">
+      <label for="token">GitHub personal access token</label>
+      <input type="password" id="token" autocomplete="off" spellcheck="false"
+             placeholder="github_pat_… or ghp_…">
+      <p class="small faint" style="margin:6px 0 0">
+        Kept in this browser's local storage. It is sent only to api.github.com, never to this
+        site — there is no server here to send it to.
+      </p>
+    </div>
+    <div class="row">
+      <button class="btn" id="go">Sign in</button>
+      <a class="btn ghost" href="https://github.com/settings/tokens" target="_blank" rel="noopener">
+        Create a token</a>
+    </div>
+    <div id="result" style="margin-top:14px"></div>
+  </div>
+
+  <div class="card">
+    <h3>What the token needs</h3>
+    <p class="muted small">A classic token with the <code>repo</code> scope, or a fine-grained
+    token with read and write access to <em>Contents</em> for the repositories you want the
+    suite to use. Read access alone is enough to browse; uploading needs write.</p>
+    <p class="muted small">The token is a password. Treat it like one — the
+    <a href="./link/">link a product</a> page explains how to hand it to a desktop program
+    without pasting it into a chat window.</p>
+  </div>
+</main>
+
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/login/');
+  I.footer();
+
+  var input = document.getElementById('token');
+  var button = document.getElementById('go');
+  var result = document.getElementById('result');
+
+  function next() {
+    var params = new URLSearchParams(location.search);
+    return params.get('next') || I.page('/myself/');
+  }
+
+  function fail(message) {
+    I.clear(result);
+    result.appendChild(I.el('div', { class: 'note bad', text: message }));
+  }
+
+  function attempt() {
+    var value = input.value.trim();
+    if (!value) { fail('Paste a token first.'); return; }
+
+    I.setToken(value);
+    I.clear(result);
+    result.appendChild(I.el('div', { class: 'note' }, [I.el('span', { class: 'spinner' }), ' Checking the token…']));
+
+    I.verify().then(function (user) {
+      if (!user) throw new Error('GitHub returned no account for that token.');
+      I.clear(result);
+      result.appendChild(I.el('div', { class: 'note', text:
+        'Signed in as ' + user.login + '. Redirecting…' }));
+      location.replace(next());
+    }).catch(function (e) {
+      // A token that does not work is removed again: leaving it behind means
+      // the next page looks signed in and fails in a more confusing way.
+      I.signOut();
+      fail(e.status === 401
+        ? 'GitHub rejected that token. Check it was copied whole and has not expired.'
+        : 'Could not verify the token: ' + e.message);
+    });
+  }
+
+  button.addEventListener('click', attempt);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') attempt(); });
+
+  if (I.token()) {
+    I.verify().then(function (user) {
+      if (user) {
+        I.clear(result);
+        result.appendChild(I.el('div', { class: 'note' }, [
+          'Already signed in as ' + user.login + '. ',
+          I.link(next(), 'Continue')
+        ]));
+      }
+    }).catch(function () { I.signOut(); });
+  }
+})();
+</script>
+</body>
+</html>

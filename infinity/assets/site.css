@@ -1,0 +1,221 @@
+/*
+ * Infinity.Inc - the site's stylesheet.
+ *
+ * One file, no framework. The whole site is a handful of pages that show a
+ * list of releases and let somebody download one, so a build step and a
+ * dependency tree would cost more than they saved. What a framework would
+ * give us here is a reset, a colour scale and a card; those are the three
+ * things written out below.
+ *
+ * Dark by default, because the products are dark and a download page that
+ * flashes white before the first paint looks broken.
+ */
+
+:root {
+  --bg: #0b0d12;
+  --bg-raised: #12151d;
+  --bg-hover: #171b25;
+  --line: #232838;
+  --line-soft: #1b1f2b;
+  --ink: #e6e9f0;
+  --ink-dim: #98a0b3;
+  --ink-faint: #5d6577;
+  --accent: #4c8dff;
+  --accent-dim: #2f5fb0;
+  --good: #3ddc97;
+  --warn: #ffb454;
+  --bad: #ff6b6b;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
+  --sans: "Segoe UI", system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  --max: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.6 var(--sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .5em; font-weight: 600; }
+h1 { font-size: 30px; letter-spacing: -.01em; }
+h2 { font-size: 20px; }
+h3 { font-size: 16px; }
+p { margin: 0 0 1em; }
+code, pre { font-family: var(--mono); font-size: 13px; }
+
+/* ---------------------------------------------------------------- chrome */
+
+header.site {
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 13, 18, .92);
+  position: sticky; top: 0; z-index: 20;
+  backdrop-filter: blur(8px);
+}
+header.site .inner {
+  max-width: var(--max); margin: 0 auto; padding: 0 20px;
+  height: 56px; display: flex; align-items: center; gap: 24px;
+}
+header.site .brand {
+  font-weight: 650; color: var(--ink); letter-spacing: -.01em;
+  display: flex; align-items: center; gap: 9px; white-space: nowrap;
+}
+header.site .brand .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 10px var(--accent);
+}
+header.site nav { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+header.site nav a {
+  color: var(--ink-dim); padding: 6px 10px; border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+header.site nav a:hover { color: var(--ink); background: var(--bg-hover); text-decoration: none; }
+header.site nav a[aria-current="page"] { color: var(--ink); background: var(--bg-raised); }
+header.site .who { font-size: 13px; color: var(--ink-dim); display: flex; gap: 10px; align-items: center; }
+header.site .who img { width: 22px; height: 22px; border-radius: 50%; }
+
+main { flex: 1; max-width: var(--max); width: 100%; margin: 0 auto; padding: 36px 20px 64px; }
+
+footer.site {
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink-faint); font-size: 13px;
+}
+footer.site .inner {
+  max-width: var(--max); margin: 0 auto; padding: 20px;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------- pieces */
+
+.crumbs { color: var(--ink-faint); font-size: 13px; margin-bottom: 18px; }
+.crumbs a { color: var(--ink-dim); }
+
+.lede { color: var(--ink-dim); font-size: 17px; max-width: 62ch; }
+
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.card + .card { margin-top: 16px; }
+.card h3 { margin-top: 0; }
+.card p:last-child { margin-bottom: 0; }
+
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+.product {
+  display: block; color: inherit;
+  background: var(--bg-raised); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px;
+  transition: border-color .12s, background .12s, transform .12s;
+}
+.product:hover { border-color: var(--accent-dim); background: var(--bg-hover); text-decoration: none; transform: translateY(-1px); }
+.product .tag { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+.product h3 { margin: 6px 0 6px; }
+.product p { color: var(--ink-dim); font-size: 14px; margin: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: #fff; border: 0;
+  padding: 9px 16px; border-radius: var(--radius-sm);
+  font: 500 14px var(--sans); cursor: pointer;
+}
+.btn:hover { background: #5c98ff; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost:hover { background: var(--bg-hover); border-color: var(--accent-dim); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { padding: 5px 11px; font-size: 13px; }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); }
+th { color: var(--ink-dim); font-weight: 500; font-size: 13px; }
+tbody tr:hover { background: var(--bg-hover); }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13px; }
+td.mono { font-family: var(--mono); font-size: 13px; color: var(--ink-dim); }
+
+input[type=text], input[type=password], input[type=search], select, textarea {
+  width: 100%; background: var(--bg); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 9px 12px; font: 14px var(--sans);
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-dim); }
+label { display: block; font-size: 13px; color: var(--ink-dim); margin: 0 0 6px; }
+.field { margin-bottom: 14px; }
+
+.pill {
+  display: inline-block; font-size: 12px; padding: 2px 8px;
+  border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim);
+}
+.pill.good { color: var(--good); border-color: #1f5f45; }
+.pill.warn { color: var(--warn); border-color: #6b4d20; }
+.pill.bad  { color: var(--bad);  border-color: #6b2b2b; }
+
+.note {
+  border-left: 3px solid var(--accent-dim); background: var(--bg-raised);
+  padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--ink-dim); font-size: 14px;
+}
+.note.bad { border-left-color: var(--bad); }
+.note.warn { border-left-color: var(--warn); }
+
+.empty { color: var(--ink-faint); text-align: center; padding: 32px 16px; }
+.muted { color: var(--ink-dim); }
+.faint { color: var(--ink-faint); }
+.mono { font-family: var(--mono); }
+.small { font-size: 13px; }
+.center { text-align: center; }
+.stack > * + * { margin-top: 16px; }
+
+pre.block {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 14px 16px; overflow-x: auto;
+  color: var(--ink-dim); margin: 0 0 1em;
+}
+
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--accent);
+  display: inline-block; animation: spin .7s linear infinite;
+  vertical-align: -2px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- markdown */
+
+.md { max-width: 76ch; }
+.md h1 { font-size: 26px; margin-top: 0; }
+.md h2 { margin-top: 1.6em; padding-bottom: .3em; border-bottom: 1px solid var(--line-soft); }
+.md h3 { margin-top: 1.4em; }
+.md ul, .md ol { padding-left: 22px; }
+.md li { margin: .3em 0; }
+.md code { background: var(--bg-raised); border: 1px solid var(--line-soft); padding: 1px 5px; border-radius: 4px; }
+.md pre { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; overflow-x: auto; }
+.md pre code { background: none; border: 0; padding: 0; }
+.md blockquote { margin: 0 0 1em; padding: 0 16px; border-left: 3px solid var(--line); color: var(--ink-dim); }
+.md table { margin-bottom: 1em; }
+.md hr { border: 0; border-top: 1px solid var(--line-soft); margin: 2em 0; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 24px; }
+  header.site .inner { height: auto; padding: 10px 16px; flex-wrap: wrap; }
+  header.site nav { order: 3; width: 100%; }
+  main { padding: 24px 16px 48px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px 8px; }
+}

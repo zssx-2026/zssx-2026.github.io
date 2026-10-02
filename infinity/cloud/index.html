@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloud — Infinity.Inc</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<main id="app">
+  <h1>Cloud</h1>
+  <p class="lede">The same drive Infinity Cloud shows on the desktop, read out of the same
+  releases. A storage repository holds a manifest named <code>file.json</code>; the manifest names
+  the files, and each file's parts name the release assets that hold its bytes.</p>
+
+  <div id="gate"></div>
+
+  <div id="view" hidden>
+    <div class="spread" style="margin-bottom:16px">
+      <div class="row">
+        <label for="store" class="small muted" style="margin:0">Storage</label>
+        <select id="store" style="width:auto"></select>
+      </div>
+      <div class="row">
+        <button class="btn ghost small" id="reload">Refresh</button>
+      </div>
+    </div>
+    <div id="summary" class="small muted" style="margin-bottom:12px"></div>
+    <div id="tree"></div>
+    <div id="trash"></div>
+  </div>
+</main>
+
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/cloud/');
+  I.footer();
+
+  var gate = document.getElementById('gate');
+  var view = document.getElementById('view');
+  var storeSelect = document.getElementById('store');
+  var summary = document.getElementById('summary');
+  var tree = document.getElementById('tree');
+  var trashHost = document.getElementById('trash');
+  var stores = [];
+
+  if (!I.requireAuth(I.page('/cloud/'))) return;
+
+  function base64ToText(content) {
+    var bin = atob(String(content).replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+
+  /*
+   * Read the manifest. The asset endpoint answers 302 to a host that does not
+   * send CORS headers, so this can fail in a browser where it succeeds in the
+   * desktop program. That is reported as itself rather than as "no files",
+   * because those are different things and only one of them means the drive
+   * is empty.
+   */
+  function readManifest(repo, release) {
+    var asset = null;
+    (release.assets || []).forEach(function (a) { if (a.name === 'file.json') asset = a; });
+    if (!asset) return Promise.resolve(null);
+
+    return fetch(asset.browser_download_url, { credentials: 'omit' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var doc = null;
+        try { doc = JSON.parse(text); } catch (e) { doc = null; }
+        if (!doc) throw new Error('the manifest is not readable JSON');
+        return doc;
+      });
+  }
+
+  function loadStore(repo) {
+    return I.releases(repo.name).then(function (releases) {
+      var candidates = (releases || []).filter(function (r) { return !r.draft; });
+      var best = null;
+      var chain = Promise.resolve();
+      candidates.forEach(function (rel) {
+        chain = chain.then(function () {
+          return readManifest(repo.name, rel).then(function (doc) {
+            if (!doc) return;
+            var volume = Number(doc.volume || 1);
+            if (!best || volume > best.volume) best = { volume: volume, doc: doc, release: rel };
+          });
+        });
+      });
+      return chain.then(function () {
+        return { repo: repo, manifest: best ? best.doc : null, release: best ? best.release : null };
+      });
+    });
+  }
+
+  function fmtType(entry) {
+    return entry.type === 'folder' ? 'folder' : 'file';
+  }
+
+  function renderTree(loaded) {
+    I.clear(tree);
+    I.clear(trashHost);
+
+    if (!loaded.manifest) {
+      tree.appendChild(I.el('div', { class: 'note warn', text:
+        'This repository has no readable manifest. Either it is empty, or the manifest could ' +
+        'not be fetched from this page — the desktop program reads it over the GitHub API, ' +
+        'which a browser is not always allowed to do.' }));
+      tree.appendChild(I.el('p', { class: 'small muted' }, [
+        'The repository itself: ',
+        I.link('https://github.com/zssx-2026/' + loaded.repo.name, 'zssx-2026/' + loaded.repo.name)
+      ]));
+      return;
+    }
+
+    var files = loaded.manifest.files || {};
+    var paths = Object.keys(files);
+    var total = 0;
+    paths.forEach(function (p) { total += Number(files[p].size || 0); });
+
+    summary.textContent = paths.length + ' entries · ' + I.fmtSize(total) +
+      ' · volume ' + (loaded.manifest.volume || 1) +
+      ' · updated ' + I.fmtDate(new Date(Number(loaded.manifest.updated || 0)).toISOString());
+
+    if (!paths.length) {
+      tree.appendChild(I.el('div', { class: 'empty', text: 'The drive is empty.' }));
+    } else {
+      paths.sort();
+      var table = I.el('table');
+      table.appendChild(I.el('thead', null, [I.el('tr', null, [
+        I.el('th', { text: 'Path' }), I.el('th', { text: 'Type' }),
+        I.el('th', { class: 'num', text: 'Size' }),
+        I.el('th', { text: 'Modified' }), I.el('th')
+      ])]));
+      var body = I.el('tbody');
+      paths.forEach(function (p) {
+        var entry = files[p];
+        var row = I.el('tr');
+        row.appendChild(I.el('td', { class: 'mono', text: p }));
+        row.appendChild(I.el('td', { class: 'muted', text: fmtType(entry) }));
+        row.appendChild(I.el('td', { class: 'num', text: I.fmtSize(entry.size) }));
+        row.appendChild(I.el('td', { class: 'muted small', text:
+          entry.modified ? I.fmtDate(new Date(Number(entry.modified)).toISOString()) : '' }));
+
+        var cell = I.el('td');
+        var parts = entry.parts;
+        if (Array.isArray(parts) && parts.length && parts[0].asset) {
+          // The manifest names the repository, the release and the asset, so
+          // the download URL is built from those rather than searched for.
+          var href = 'https://github.com/zssx-2026/' + parts[0].repo +
+            '/releases/download/' + parts[0].release + '/' + encodeURIComponent(parts[0].asset);
+          cell.appendChild(I.el('a', { class: 'btn small ghost', href: href, text: 'Download' }));
+          if (parts.length > 1) {
+            cell.appendChild(I.el('span', { class: 'small faint', text: ' ' + parts.length + ' parts' }));
+          }
+        } else {
+          cell.appendChild(I.el('span', { class: 'small faint', text: 'no parts' }));
+        }
+        row.appendChild(cell);
+        body.appendChild(row);
+      });
+      table.appendChild(body);
+      tree.appendChild(table);
+    }
+
+    var trash = loaded.manifest.trash || {};
+    var trashed = Object.keys(trash);
+    if (trashed.length) {
+      trashHost.appendChild(I.el('h2', { style: 'margin-top:28px', text: 'Recycle bin' }));
+      var tt = I.el('table');
+      tt.appendChild(I.el('thead', null, [I.el('tr', null, [
+        I.el('th', { text: 'Path' }), I.el('th', { class: 'num', text: 'Size' }),
+        I.el('th', { text: 'Deleted' })
+      ])]));
+      var tb = I.el('tbody');
+      trashed.forEach(function (p) {
+        var e = trash[p];
+        tb.appendChild(I.el('tr', null, [
+          I.el('td', { class: 'mono', text: p }),
+          I.el('td', { class: 'num', text: I.fmtSize(e.size) }),
+          I.el('td', { class: 'muted small', text:
+            e.deleted ? I.fmtDate(new Date(Number(e.deleted)).toISOString()) : '' })
+        ]));
+      });
+      tt.appendChild(tb);
+      trashHost.appendChild(tt);
+      trashHost.appendChild(I.el('p', { class: 'small faint', text:
+        'Restoring and purging are done from the desktop program, which can rewrite the manifest. ' +
+        'This page is read-only by design.' }));
+    }
+  }
+
+  function load() {
+    var name = storeSelect.value;
+    var repo = null;
+    stores.forEach(function (s) { if (s.name === name) repo = s; });
+    if (!repo) return;
+
+    I.loading(tree, 'Reading the manifest…');
+    I.clear(trashHost);
+    summary.textContent = '';
+
+    loadStore(repo).then(renderTree).catch(function (e) {
+      I.clear(tree);
+      tree.appendChild(I.el('div', { class: 'note bad', text: 'Could not read the drive: ' + e.message }));
+    });
+  }
+
+  I.loading(gate, 'Finding your storage repositories…');
+
+  I.gh('/user/repos?per_page=100&affiliation=owner&sort=updated')
+    .then(function (repos) {
+      stores = (repos || []).filter(function (r) { return r.name.indexOf('inc_') === 0; });
+      I.clear(gate);
+
+      if (!stores.length) {
+        gate.appendChild(I.el('div', { class: 'note', text:
+          'No storage repository was found in this account. Infinity Cloud creates one named ' +
+          'inc_… the first time it stores something; until then there is nothing here to show.' }));
+        gate.appendChild(I.el('p', null, [I.link(I.page('/download/infinitycloud/'), 'Get Infinity Cloud')]));
+        return;
+      }
+
+      stores.forEach(function (r) {
+        storeSelect.appendChild(I.el('option', { value: r.name, text: r.name + ' (' + r.private + ')' }));
+      });
+      view.hidden = false;
+      load();
+    })
+    .catch(function (e) {
+      I.failure(gate, 'Could not list your repositories: ' + e.message);
+    });
+
+  storeSelect.addEventListener('change', load);
+  document.getElementById('reload').addEventListener('click', load);
+})();
+</script>
+</body>
+</html>

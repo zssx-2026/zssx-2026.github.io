@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not found — Infinity.Inc</title>
+<link rel="stylesheet" href="/infinity/assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:640px">
+  <h1>Not found</h1>
+  <p class="lede" id="what">That address does not match a page on this site.</p>
+  <div class="card" id="hint"></div>
+</main>
+
+<script src="/infinity/assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('');
+  I.footer();
+
+  var path = location.pathname;
+  document.getElementById('what').textContent = path + ' does not match a page on this site.';
+
+  var hint = document.getElementById('hint');
+
+  // A run or link request has a dynamic id in the path, so those two routes
+  // have no file of their own. Sending them to the right page is more useful
+  // than a dead end.
+  var run = path.match(/\/run\/([^/]+)\/?$/);
+  var link = path.match(/\/login\/link\/([^/]+)\/?$/);
+
+  if (run) {
+    hint.appendChild(I.el('p', { text: 'This looks like a run request. Opening the run page…' }));
+    location.replace(I.page('/run/') + encodeURIComponent(run[1]) + '/' + location.search);
+    return;
+  }
+  if (link) {
+    hint.appendChild(I.el('p', { text: 'This looks like a product link request. Opening it…' }));
+    location.replace(I.page('/login/link/') + encodeURIComponent(link[1]) + '/' + location.search);
+    return;
+  }
+
+  hint.appendChild(I.el('p', { class: 'muted', text: 'These are the pages that do exist:' }));
+  var list = I.el('ul');
+  [
+    ['/', 'Overview'], ['/download/', 'Download'], ['/docs/', 'Documentation'],
+    ['/cloud/', 'Cloud'], ['/login/', 'Sign in'], ['/signup/', 'Sign up'],
+    ['/myself/', 'Account'], ['/settings/', 'Settings'], ['/login/link/', 'Link a product']
+  ].forEach(function (item) {
+    list.appendChild(I.el('li', null, [I.link(I.page(item[0]), item[1])]));
+  });
+  hint.appendChild(list);
+
+  I.PRODUCTS.forEach(function (p) {
+    hint.appendChild(I.el('div', { class: 'small' }, [
+      I.link(I.page('/download/' + p.slug + '/'), p.name)
+    ]));
+  });
+})();
+</script>
+</body>
+</html>

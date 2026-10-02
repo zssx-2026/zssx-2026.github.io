@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run — Infinity.Inc</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:680px">
+  <h1>Run a program</h1>
+  <p class="lede">A desktop program opened this page with a request. A web page cannot start a
+  program on your machine, so this page does the two things it actually can: it shows you exactly
+  what is being asked for, and it hands the request to a copy of the suite you already have.</p>
+
+  <div class="card">
+    <h3>The request</h3>
+    <div id="request"></div>
+  </div>
+
+  <div class="card">
+    <h3>Run it</h3>
+    <div id="actions"></div>
+  </div>
+</main>
+
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/run/');
+  I.footer();
+
+  var reqHost = document.getElementById('request');
+  var actHost = document.getElementById('actions');
+
+  // /run/<runid>?="<base64>"
+  var parts = location.pathname.replace(/\/+$/, '').split('/');
+  var runId = parts[parts.length - 1] === 'run' ? '' : parts[parts.length - 1];
+  var raw = location.search.replace(/^\?/, '');
+  var decoded = I.decodePayload(raw);
+
+  function row(label, value, mono) {
+    var line = I.el('div', { class: 'row', style: 'margin:4px 0' });
+    line.appendChild(I.el('span', { class: 'small muted', style: 'min-width:120px', text: label }));
+    line.appendChild(I.el('span', { class: mono ? 'mono small' : '', text: value || '—' }));
+    return line;
+  }
+
+  // The id names the product. Anything the id does not match is shown as an
+  // unknown request rather than silently treated as the first product.
+  var product = I.productBySlug(String(runId).toLowerCase());
+  if (!product) {
+    for (var i = 0; i < I.PRODUCTS.length; i++) {
+      if (I.PRODUCTS[i].short === String(runId).toLowerCase()) product = I.PRODUCTS[i];
+    }
+  }
+
+  I.clear(reqHost);
+  reqHost.appendChild(row('Run id', runId || '(none)', true));
+  reqHost.appendChild(row('Product', product ? product.name : 'not recognised'));
+  reqHost.appendChild(row('Payload', decoded ? decoded.slice(0, 500) : '(none)', true));
+  if (decoded.length > 500) {
+    reqHost.appendChild(I.el('p', { class: 'small faint', text:
+      'Showing the first 500 characters of ' + decoded.length + '.' }));
+  }
+
+  I.clear(actHost);
+
+  if (!runId) {
+    actHost.appendChild(I.el('div', { class: 'note warn', text:
+      'This address carries no run id. A program opens this page with one; opened by hand it has none.' }));
+    actHost.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'Downloads')]));
+    return;
+  }
+
+  // 1. Hand off to a local install. The suite registers a protocol handler,
+  //    so this is the path that actually starts something.
+  var handoff = 'infinity://run/' + encodeURIComponent(runId) + '/?=' + encodeURIComponent(raw);
+  actHost.appendChild(I.el('p', { class: 'muted' }, [
+    'If you have the suite installed, this button hands the request to it. Your browser will ' +
+    'ask once whether to allow the link.'
+  ]));
+  actHost.appendChild(I.el('a', { class: 'btn', href: handoff }, ['Open in the installed suite']));
+
+  // 2. Otherwise, get the program.
+  var alt = I.el('div', { style: 'margin-top:18px' });
+  if (product) {
+    alt.appendChild(I.el('p', { class: 'muted' }, [
+      'No copy installed yet? Download ' + product.name + ' and open this page again.' ]));
+    alt.appendChild(I.el('a', {
+      class: 'btn ghost', href: I.page('/download/' + product.slug + '/')
+    }, ['Download ' + product.name]));
+  } else {
+    alt.appendChild(I.el('div', { class: 'note warn', text:
+      'The run id does not match a product this site knows about, so there is nothing to ' +
+      'download for it. The link may be from a newer version of the suite than this page.' }));
+    alt.appendChild(I.el('a', { class: 'btn ghost', href: I.page('/download/') }, ['All downloads']));
+  }
+  actHost.appendChild(alt);
+
+  // 3. Record the request so a desktop program can pick it up after signing in.
+  if (I.token()) {
+    try {
+      var pending = JSON.parse(localStorage.getItem('infinity.pending') || '[]');
+      pending.push({ id: runId, payload: raw, at: Date.now() });
+      localStorage.setItem('infinity.pending', JSON.stringify(pending.slice(-20)));
+      actHost.appendChild(I.el('p', { class: 'small faint', style: 'margin-top:16px', text:
+        'Saved to this browser as a pending request for the installed suite to collect.' }));
+    } catch (e) { /* a full or disabled store is not worth failing the page over */ }
+  } else {
+    actHost.appendChild(I.el('p', { class: 'small muted', style: 'margin-top:16px' }, [
+      I.link(I.page('/login/') + '?next=' + encodeURIComponent(location.pathname + location.search),
+        'Sign in'),
+      ' to save this request and see the account it belongs to.'
+    ]));
+  }
+})();
+</script>
+</body>
+</html>

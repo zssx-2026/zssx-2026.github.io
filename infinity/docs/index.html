@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation — Infinity.Inc</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<main id="app">
+  <h1>Documentation</h1>
+  <p class="lede">Read straight out of the project's own files, so what is written here is what
+  the code says.</p>
+
+  <div class="grid" style="grid-template-columns: 240px 1fr; align-items: start">
+    <aside class="card" id="toc" style="position:sticky; top:76px"></aside>
+    <article class="card md" id="doc"></article>
+  </div>
+</main>
+
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.nav('/docs/');
+  I.footer();
+
+  var DOCS = [
+    { id: 'readme', title: 'The C++ suite', path: 'cpp/README.md',
+      note: 'What the four applications are, how they are built, and why.' },
+    { id: 'user', title: 'Using it', path: 'README.md',
+      note: 'The front door: install, sign in, first run.' },
+    { id: 'catalogue', title: 'Catalogue format', path: 'docs/catalogue-format.md',
+      note: 'How a package is published, column by column.' }
+  ];
+
+  var toc = document.getElementById('toc');
+  var host = document.getElementById('doc');
+
+  function pick(id) {
+    for (var i = 0; i < DOCS.length; i++) if (DOCS[i].id === id) return DOCS[i];
+    return DOCS[0];
+  }
+
+  function renderToc(active) {
+    I.clear(toc);
+    toc.appendChild(I.el('h3', { text: 'Contents' }));
+    DOCS.forEach(function (d) {
+      var a = I.el('a', { href: '#' + d.id, class: 'small', text: d.title });
+      a.style.display = 'block';
+      a.style.padding = '5px 0';
+      if (d.id === active) a.style.color = 'var(--ink)';
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        location.hash = d.id;
+        show(d.id);
+      });
+      toc.appendChild(a);
+    });
+  }
+
+  function show(id) {
+    var doc = pick(id);
+    renderToc(doc.id);
+    I.loading(host, 'Reading ' + doc.path + '…');
+
+    I.gh('/repos/zssx-2026/Infinity.inc/contents/' + doc.path + '?ref=main')
+      .then(function (data) {
+        if (!data || !data.content) throw new Error('the file is empty');
+        var text = '';
+        try {
+          var bin = atob(String(data.content).replace(/\n/g, ''));
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          text = new TextDecoder('utf-8').decode(bytes);
+        } catch (e) {
+          throw new Error('the file could not be decoded');
+        }
+        I.clear(host);
+        I.renderMarkdown(host, text);
+        host.appendChild(I.el('hr'));
+        host.appendChild(I.el('p', { class: 'small faint' }, [
+          'Source: ',
+          I.link('https://github.com/zssx-2026/Infinity.inc/blob/main/' + doc.path, doc.path),
+          doc.note ? ' — ' + doc.note : ''
+        ]));
+      })
+      .catch(function (e) {
+        I.clear(host);
+        host.appendChild(I.el('h2', { text: doc.title }));
+        host.appendChild(I.el('div', { class: 'note warn', text:
+          'This document could not be read: ' + e.message }));
+        host.appendChild(I.el('p', { class: 'small muted' }, [
+          'It is published in the source repository: ',
+          I.link('https://github.com/zssx-2026/Infinity.inc/blob/main/' + doc.path, doc.path)
+        ]));
+        if (/404/.test(e.message)) {
+          host.appendChild(I.el('p', { class: 'small faint', text:
+            'A 404 here usually means the document has not been pushed yet rather than that it is missing from the project.' }));
+        }
+      });
+  }
+
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+  show(location.hash.slice(1) || 'readme');
+})();
+</script>
+</body>
+</html>
