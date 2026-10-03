@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documentation — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
+<title>文档 — Infinity.Inc</title>
+<meta name="description" content="直接读取项目自身的文件，所以写在这里的就是代码里说的。">
+<link rel="stylesheet" href="../../assets/site.css">
 </head>
 <body>
 <main id="app">
-  <h1>Documentation</h1>
-  <p class="lede">Read straight out of the project's own files, so what is written here is what
-  the code says.</p>
+  <h1 data-t="docsTitle"></h1>
+  <p class="lede" data-t="docsLede"></p>
 
   <div class="grid" style="grid-template-columns: 240px 1fr; align-items: start">
     <aside class="card" id="toc" style="position:sticky; top:76px"></aside>
@@ -18,20 +18,19 @@
   </div>
 </main>
 
-<script src="../assets/site.js"></script>
+<script src="../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/docs/');
   I.footer();
 
   var DOCS = [
-    { id: 'readme', title: 'The C++ suite', path: 'cpp/README.md',
-      note: 'What the four applications are, how they are built, and why.' },
-    { id: 'user', title: 'Using it', path: 'README.md',
-      note: 'The front door: install, sign in, first run.' },
-    { id: 'catalogue', title: 'Catalogue format', path: 'docs/catalogue-format.md',
-      note: 'How a package is published, column by column.' }
+    { id: 'readme', title: I.t('docSuite'), path: 'cpp/README.md', note: I.t('docSuiteNote') },
+    { id: 'user', title: I.t('docUsing'), path: 'README.md', note: I.t('docUsingNote') },
+    { id: 'catalogue', title: I.t('docCatalogue'), path: 'docs/catalogue-format.md',
+      note: I.t('docCatalogueNote') }
   ];
 
   var toc = document.getElementById('toc');
@@ -44,7 +43,7 @@
 
   function renderToc(active) {
     I.clear(toc);
-    toc.appendChild(I.el('h3', { text: 'Contents' }));
+    toc.appendChild(I.el('h3', { text: I.t('contents') }));
     DOCS.forEach(function (d) {
       var a = I.el('a', { href: '#' + d.id, class: 'small', text: d.title });
       a.style.display = 'block';
@@ -62,11 +61,11 @@
   function show(id) {
     var doc = pick(id);
     renderToc(doc.id);
-    I.loading(host, 'Reading ' + doc.path + '…');
+    I.loading(host, I.t('readingFile') + ' ' + doc.path + '…');
 
     I.gh('/repos/zssx-2026/Infinity.inc/contents/' + doc.path + '?ref=main')
       .then(function (data) {
-        if (!data || !data.content) throw new Error('the file is empty');
+        if (!data || !data.content) throw new Error(I.t('docEmpty'));
         var text = '';
         try {
           var bin = atob(String(data.content).replace(/\n/g, ''));
@@ -74,13 +73,13 @@
           for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
           text = new TextDecoder('utf-8').decode(bytes);
         } catch (e) {
-          throw new Error('the file could not be decoded');
+          throw new Error(I.t('docDecodeFailed'));
         }
         I.clear(host);
         I.renderMarkdown(host, text);
         host.appendChild(I.el('hr'));
         host.appendChild(I.el('p', { class: 'small faint' }, [
-          'Source: ',
+          I.t('sourceLabel') + ' ',
           I.link('https://github.com/zssx-2026/Infinity.inc/blob/main/' + doc.path, doc.path),
           doc.note ? ' — ' + doc.note : ''
         ]));
@@ -89,11 +88,14 @@
         I.clear(host);
         host.appendChild(I.el('h2', { text: doc.title }));
         host.appendChild(I.el('div', { class: 'note warn', text:
-          'This document could not be read: ' + e.message }));
+          I.t('docUnreadable') + ' ' + e.message }));
         host.appendChild(I.el('p', { class: 'small muted' }, [
-          'It is published in the source repository: ',
+          I.t('publishedInRepo') + ' ',
           I.link('https://github.com/zssx-2026/Infinity.inc/blob/main/' + doc.path, doc.path)
         ]));
+        if (/404/.test(e.message)) {
+          host.appendChild(I.el('p', { class: 'small faint', text: I.t('docMissing404') }));
+        }
       });
   }
 

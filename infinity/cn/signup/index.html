@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>注册 — Infinity.Inc</title>
+<meta name="description" content="这里没有可注册的东西，这是有意为之。整套软件没有账号、没有服务器，所有数据都存在你自己的 GitHub 账户里。">
+<link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+<main id="app" style="max-width:560px">
+  <h1 data-t="signUp"></h1>
+  <p class="lede" data-t="signupLede"></p>
+
+  <div class="card">
+    <h3 data-t="stepAccount"></h3>
+    <p class="muted" data-t="stepAccountText"></p>
+    <p class="row">
+      <a class="btn ghost" href="https://github.com/signup" target="_blank" rel="noopener"
+         data-t="createAccount"></a>
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 data-t="stepToken"></h3>
+    <p class="muted" data-t="stepTokenText"></p>
+    <p class="muted small" data-t="stepTokenFine"></p>
+    <p class="row">
+      <a class="btn ghost" href="https://github.com/settings/tokens" target="_blank" rel="noopener"
+         data-t="createToken"></a>
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 data-t="stepHandOver"></h3>
+    <p class="muted" data-t="stepHandOverText"></p>
+    <div class="row">
+      <a class="btn" href="../login/" data-t="signIn"></a>
+      <a class="btn ghost" href="../download/" data-t="downloadSuite"></a>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong data-t="signupPrivacyTitle"></strong>
+    <span data-t="signupPrivacyText"></span>
+  </div>
+</main>
+
+<script src="../../assets/site.js"></script>
+<script>
+(function () {
+  var I = window.INFINITY;
+  I.applyTranslations();
+  I.nav('/signup/');
+  I.footer();
+})();
+</script>
+</body>
+</html>

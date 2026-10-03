@@ -1,30 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Account — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
+<title>账户 — Infinity.Inc</title>
+<meta name="description" content="这里没有需要管理的 Infinity 账户。本页显示这套软件正在以哪个 GitHub 账户行动，以及它能访问什么。">
+<link rel="stylesheet" href="../../assets/site.css">
 </head>
 <body>
 <main id="app" style="max-width:760px">
-  <h1>Account</h1>
-  <p class="lede">There is no Infinity account to manage. This page shows the GitHub account the
-  suite is acting as, and what it can reach.</p>
+  <h1 data-t="account"></h1>
+  <p class="lede" data-t="myselfLede"></p>
   <div id="body"></div>
 </main>
 
-<script src="../assets/site.js"></script>
+<script src="../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/myself/');
   I.footer();
 
   var host = document.getElementById('body');
 
   if (!I.requireAuth(I.page('/myself/'))) return;
-  I.loading(host, 'Reading your account…');
+  I.loading(host, I.t('readingAccount'));
 
   Promise.all([
     I.gh('/user'),
@@ -49,10 +50,10 @@
     var facts = I.el('table', { style: 'margin-top:16px' });
     var tb = I.el('tbody');
     [
-      ['Repositories', I.fmtCount(user.public_repos + (user.total_private_repos || 0))],
-      ['Storage repositories', String(repos.filter(function (x) { return x.name.indexOf('inc_') === 0; }).length)],
-      ['Token in use', I.token() ? 'yes, in this browser only' : 'none'],
-      ['Member since', user.created_at ? I.fmtDate(user.created_at) : '']
+      [I.t('repositories'), I.fmtCount(user.public_repos + (user.total_private_repos || 0))],
+      [I.t('storageRepos'), String(repos.filter(function (x) { return x.name.indexOf('inc_') === 0; }).length)],
+      [I.t('tokenInUse'), I.token() ? I.t('yesBrowserOnly') : I.t('noneWord')],
+      [I.t('memberSince'), user.created_at ? I.fmtDate(user.created_at) : '']
     ].forEach(function (row) {
       tb.appendChild(I.el('tr', null, [
         I.el('td', { class: 'muted', style: 'width:200px', text: row[0] }),
@@ -66,26 +67,25 @@
     // ---------------------------------------------------------- storage
     var stores = repos.filter(function (x) { return x.name.indexOf('inc_') === 0; });
     var storeCard = I.el('div', { class: 'card' });
-    storeCard.appendChild(I.el('h3', { text: 'Cloud storage' }));
+    storeCard.appendChild(I.el('h3', { text: I.t('cloudStorage') }));
     if (!stores.length) {
-      storeCard.appendChild(I.el('p', { class: 'muted', text:
-        'No repository named inc_… exists yet. Infinity Cloud creates one the first time it ' +
-        'stores something.' }));
+      storeCard.appendChild(I.el('p', { class: 'muted', text: I.t('noStoreYet') }));
     } else {
-      storeCard.appendChild(I.el('p', { class: 'muted small', text:
-        'These repositories hold the cloud drive.' }));
+      storeCard.appendChild(I.el('p', { class: 'muted small', text: I.t('storeWarning') }));
       var st = I.el('table');
       st.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: 'Repository' }), I.el('th', { text: 'Visibility' }),
-        I.el('th', { class: 'num', text: 'Size' }), I.el('th')
+        I.el('th', { text: I.t('repositoryWord') }),
+        I.el('th', { text: I.t('visibilityWord') }),
+        I.el('th', { class: 'num', text: I.t('size') }),
+        I.el('th')
       ])]));
       var sb = I.el('tbody');
       stores.forEach(function (s) {
         sb.appendChild(I.el('tr', null, [
           I.el('td', null, [I.link('https://github.com/' + s.full_name, s.name)]),
-          I.el('td', { class: 'muted small', text: s.private ? 'private' : 'public' }),
+          I.el('td', { class: 'muted small', text: s.private ? I.t('privateWord') : I.t('publicWord') }),
           I.el('td', { class: 'num', text: I.fmtSize((s.size || 0) * 1024) }),
-          I.el('td', null, [I.link(I.page('/cloud/'), 'open', 'small')])
+          I.el('td', null, [I.link(I.page('/cloud/'), I.t('openWord'), 'small')])
         ]));
       });
       st.appendChild(sb);
@@ -95,12 +95,10 @@
 
     // ---------------------------------------------------------- sign out
     var out = I.el('div', { class: 'card' });
-    out.appendChild(I.el('h3', { text: 'Sign out' }));
-    out.appendChild(I.el('p', { class: 'muted small', text:
-      'Signing out removes the token from this browser. It does not revoke it — revoke it on ' +
-      'GitHub if you think it has been seen by somebody else.' }));
+    out.appendChild(I.el('h3', { text: I.t('signOutTitle') }));
+    out.appendChild(I.el('p', { class: 'muted small', text: I.t('signOutText') }));
     var row = I.el('div', { class: 'row' });
-    var button = I.el('button', { class: 'btn ghost' }, ['Sign out of this browser']);
+    var button = I.el('button', { class: 'btn ghost' }, [I.t('signOutButton')]);
     button.addEventListener('click', function () {
       I.signOut();
       location.href = I.page('/');
@@ -108,12 +106,12 @@
     row.appendChild(button);
     row.appendChild(I.el('a', {
       class: 'btn ghost', target: '_blank', rel: 'noopener',
-      href: 'https://github.com/settings/tokens'
-    }, ['Manage tokens on GitHub']));
+      href: 'https://github.com/settings/tokens', text: I.t('manageTokens')
+    }));
     out.appendChild(row);
     host.appendChild(out);
   }).catch(function (e) {
-    I.failure(host, 'Could not read your account: ' + e.message);
+    I.failure(host, I.t('accountFailed') + ' ' + e.message);
   });
 })();
 </script>

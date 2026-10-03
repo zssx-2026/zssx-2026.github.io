@@ -27,9 +27,9 @@
     var app = document.getElementById('app');
 
     if (!product) {
-      app.appendChild(I.el('h1', { text: 'Unknown product' }));
-      app.appendChild(I.el('p', { class: 'lede', text: 'There is no product called "' + slug + '".' }));
-      app.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'All downloads')]));
+      app.appendChild(I.el('h1', { text: I.t('unknownProduct') }));
+      app.appendChild(I.el('p', { class: 'lede', text: I.t('noProductNamed') + ' "' + slug + '".' }));
+      app.appendChild(I.el('p', null, [I.link(I.page('/download/'), I.t('downloadTitle'))]));
       return;
     }
 
@@ -59,7 +59,7 @@
       meta.appendChild(I.el('span', { class: 'pill', text: 'exe ' + product.short }));
       meta.appendChild(I.el('span', { class: 'pill', text: 'windows' }));
       meta.appendChild(I.el('span', { class: 'pill', text: 'self-contained' }));
-      meta.appendChild(I.link('https://github.com/zssx-2026/' + product.repo, 'source', 'small'));
+      meta.appendChild(I.link('https://github.com/zssx-2026/' + product.repo, I.t('source'), 'small'));
 
       I.clear(host);
 
@@ -77,10 +77,10 @@
       var card = I.el('div', { class: 'card' });
       var spread = I.el('div', { class: 'spread' });
       spread.appendChild(I.el('div', null, [
-        I.el('h3', { text: 'Latest — ' + (latest.name || latest.tag_name || '') }),
+        I.el('h3', { text: I.t('latestFor') + ' ' + (latest.name || latest.tag_name || '') }),
         I.el('div', { class: 'small muted', text:
           'Published ' + I.fmtDate(latest.published_at) +
-          (latest.prerelease ? ' · pre-release' : '') })
+          (latest.prerelease ? ' · ' + I.t('preRelease') : '') })
       ]));
       card.appendChild(spread);
 
@@ -89,7 +89,7 @@
 
       if (!assets.length) {
         actions.appendChild(I.el('span', { class: 'muted small', text:
-          'This release has no installer for ' + settings.downloadPlatform + '.' }));
+          I.t('noInstallerFor') + ' ' + settings.downloadPlatform + '.' }));
       } else {
         assets.slice(0, 4).forEach(function (asset) {
           actions.appendChild(I.el('a', {
@@ -101,11 +101,11 @@
 
       var all = I.el('details', { style: 'margin-top:16px' });
       all.appendChild(I.el('summary', { class: 'small muted', text:
-        'All assets in this release (' + (latest.assets || []).length + ')' }));
+        I.t('allAssets') + ' (' + (latest.assets || []).length + ')' }));
       var table = I.el('table');
       table.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: 'Asset' }), I.el('th', { class: 'num', text: 'Size' }),
-        I.el('th', { text: 'Digest' })
+        I.el('th', { text: I.t('product') }), I.el('th', { class: 'num', text: I.t('size') }),
+        I.el('th', { text: I.t('digest') })
       ])]));
       var body = I.el('tbody');
       (latest.assets || []).forEach(function (asset) {
@@ -123,7 +123,7 @@
 
       if (latest.body) {
         var notes = I.el('div', { class: 'card' });
-        notes.appendChild(I.el('h3', { text: 'Release notes' }));
+        notes.appendChild(I.el('h3', { text: I.t('notes') }));
         var md = I.el('div', { class: 'md' });
         I.renderMarkdown(md, latest.body);
         notes.appendChild(md);
@@ -133,11 +133,11 @@
       // ---------------------------------------------------------- history
       if (list.length > 1) {
         var hist = I.el('div', { class: 'card' });
-        hist.appendChild(I.el('h3', { text: 'Earlier releases' }));
+        hist.appendChild(I.el('h3', { text: I.t('earlierReleases') }));
         var ht = I.el('table');
         ht.appendChild(I.el('thead', null, [I.el('tr', null, [
-          I.el('th', { text: 'Tag' }), I.el('th', { text: 'Published' }),
-          I.el('th', { class: 'num', text: 'Assets' }), I.el('th')
+          I.el('th', { text: I.t('version') }), I.el('th', { text: I.t('published') }),
+          I.el('th', { class: 'num', text: I.t('assets') }), I.el('th')
         ])]));
         var hb = I.el('tbody');
         list.slice(1, 11).forEach(function (rel) {
@@ -145,7 +145,7 @@
             I.el('td', { class: 'mono', text: rel.tag_name || '' }),
             I.el('td', { class: 'muted', text: I.fmtDate(rel.published_at) }),
             I.el('td', { class: 'num', text: I.fmtCount((rel.assets || []).length) }),
-            I.el('td', null, [I.link(rel.html_url, 'notes', 'small')])
+            I.el('td', null, [I.link(rel.html_url, I.t('releasesNotes'), 'small')])
           ]));
         });
         ht.appendChild(hb);
@@ -160,6 +160,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     I.nav(location.pathname.replace(/\/+$/, '') + '/');
     I.footer();
+    I.applyTranslations();
     render(slugFromPath());
   });
 })();

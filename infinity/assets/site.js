@@ -54,8 +54,282 @@
     {
       slug: 'infinityinstallmanager', short: 'iim', name: 'Infinity Installer Manager', repo: 'Infinity-Installer-Manager',
       tagline: 'The single entry point. Installs the products, the plugins they drive and the resource packs they load, from one catalogue.'
+    },
+    {
+      slug: 'infinitygames', short: 'ing', name: 'Infinity Games', repo: 'Infinity-Games',
+      tagline: 'A games library: online games played inside the window and local games run from disk, in one catalogue.'
     }
   ];
+
+  /*
+   * The two languages, in one table.
+   *
+   * The site is served in English at /infinity/ and in Chinese at /infinity/cn/.
+   * Every string lives here rather than in the pages, because a copy of each
+   * page carrying its own translated prose is a pair that drifts the first time
+   * somebody edits one of them - which is how a site ends up saying two things.
+   * The pages read their language from <html lang>, so no page needs to know
+   * which directory it sits in.
+   */
+  var T = {
+    en: {
+      suiteTitle: 'The Infinity suite',
+      suiteLede: 'Six Windows applications that need nothing but Windows. No runtime, no DLL to install beside them, no installer required to get them running — each product is a single executable of a few hundred kilobytes.',
+      products: 'Products',
+      latest: 'Latest releases',
+      howItFits: 'How it fits together',
+      whereToStart: 'Where to start',
+      product: 'Product', version: 'Version', published: 'Published', assets: 'Assets',
+      size: 'Size', noReleases: 'no releases', unavailable: 'unavailable', nothingYet: 'nothing published yet',
+      releaseNotes: 'release notes',
+      reading: 'Reading releases…',
+      liveNote: 'Read live from GitHub. A product with no releases is shown as such rather than offered.',
+      twoFaces: 'Two faces, one executable',
+      twoFacesText: 'Every product has a command line (<code>&lt;p&gt;_cli.exe</code>) and a window (<code>&lt;p&gt;_gui.exe</code>). The window is Electron rendering a page served by the same executable, so the executable is still the whole program. The terminal interface was removed: it duplicated the window without being better at anything.',
+      oneCatalogue: 'One catalogue',
+      oneCatalogueText: 'Products, plugins and resource packs all come from one index — a GitHub repository where each release is a catalogue page. Infinity Installer Manager is the single entry point that reads it.',
+      unverified: 'Nothing runs unverified',
+      unverifiedText: 'A package is only installed if the SHA-256 of the bytes on disk matches the digest GitHub reports for that asset. A build with no digest is refused rather than trusted.',
+      wantEverything: 'If you want everything',
+      wantEverythingText: 'Install <a href="./download/infinityinstallmanager/">Infinity Installer Manager</a>. It is the single entry point: one catalogue covering the products, the plugins they drive and the resource packs they load.',
+      wantOne: 'If you want one thing',
+      wantOneText: 'Every product installs on its own. Pick it from <a href="./download/">the download page</a> and ignore the rest.',
+      wantRead: 'If you want to read first',
+      wantReadText: 'The <a href="./docs/">documentation</a> is the project’s own files, rendered as they are — what is written there is what the code says.',
+      downloadTitle: 'Download',
+      downloadLede: 'Each product installs on its own. If you want all of them, install <a href="./infinityinstallmanager/">Infinity Installer Manager</a> instead — it reads the same catalogue and installs the products, plugins and resource packs from one place.',
+      platform: 'Platform', requirements: 'Requirements',
+      requirementsText: 'Windows 10 or later. That is the whole list. The executables import only DLLs that ship with Windows — <code>kernel32</code>, <code>user32</code>, <code>gdi32</code>, <code>winhttp</code> and the UCRT forwarders — so there is no runtime to install, no framework to download and nothing to keep updated beside the program itself.',
+      requirementsNote: 'You will need a GitHub account and a personal access token: the suite stores its data in GitHub releases. See <a href="../docs/">the documentation</a> for how to create one.',
+      downloadAction: 'Download',
+      noBuild: 'no build for',
+      contents: 'Contents',
+      unknownProduct: 'Unknown product',
+      noProductNamed: 'There is no product called',
+      latestFor: 'Latest —',
+      allAssets: 'All assets in this release',
+      notesTitle: 'Release notes',
+      earlier: 'Earlier releases',
+      noManifest: 'This repository has no readable manifest.',
+      emptyDrive: 'The drive is empty.',
+      entries: 'entries',
+      recycleBin: 'Recycle bin',
+      restoreNote: 'Restoring and purging are done from the desktop program, which can rewrite the manifest. This page is read-only by design.',
+      noStorage: 'No storage repository was found in this account.',
+      storage: 'Storage',
+      signIn: 'Sign in', signUp: 'Sign up', token: 'GitHub personal access token',
+      account: 'Account', settings: 'Settings', cloud: 'Cloud', docs: 'Documentation',
+      overview: 'Overview', profile: 'Account', linkProduct: 'Link a product'
+    },
+    zh: {
+      suiteTitle: 'Infinity 套件',
+      suiteLede: '六款只需要 Windows 的 Windows 应用。没有运行时，没有要一并安装的 DLL，也不需要安装程序才能跑起来 —— 每个产品都是一个几百 KB 的可执行文件。',
+      products: '产品',
+      latest: '最新发布',
+      howItFits: '它们是怎么配合的',
+      whereToStart: '从哪里开始',
+      product: '产品', version: '版本', published: '发布时间', assets: '资产',
+      size: '大小', noReleases: '暂无发布', unavailable: '无法获取', nothingYet: '尚未发布',
+      releaseNotes: '发布说明',
+      reading: '正在读取发布…',
+      liveNote: '实时读取自 GitHub。没有发布的产品会如实显示，而不是给一个点不开的链接。',
+      twoFaces: '两种形态，一个可执行文件',
+      twoFacesText: '每个产品都有命令行（<code>&lt;p&gt;_cli.exe</code>）和窗口（<code>&lt;p&gt;_gui.exe</code>）。窗口是 Electron 渲染同一个可执行文件提供的页面，所以那个可执行文件仍然是整个程序。终端界面已移除：它只是把窗口重做了一遍，并没有更好。',
+      oneCatalogue: '一份目录',
+      oneCatalogueText: '产品、插件和资源包都来自同一份索引 —— 一个 GitHub 仓库，其中每个 release 就是一个目录页。Infinity Installer Manager 是读取它的统一入口。',
+      unverified: '未校验的东西不会运行',
+      unverifiedText: '只有在磁盘上算出的 SHA-256 与 GitHub 报告的摘要一致时，包才会被安装。没有摘要的构建会被拒绝，而不是被信任。',
+      wantEverything: '如果你全都想要',
+      wantEverythingText: '安装 <a href="./download/infinityinstallmanager/">Infinity Installer Manager</a>。它是统一入口：一份目录覆盖产品、产品所驱动的插件以及资源包。',
+      wantOne: '如果你只要一个',
+      wantOneText: '每个产品都能单独安装。从<a href="./download/">下载页</a>挑一个，其余的不用管。',
+      wantRead: '如果你想先读一读',
+      wantReadText: '<a href="./docs/">文档</a>是项目自己的文件，原样渲染 —— 写在那里的就是代码里说的。',
+      downloadTitle: '下载',
+      downloadLede: '每个产品都能单独安装。如果你全都想要，改为安装 <a href="./infinityinstallmanager/">Infinity Installer Manager</a> —— 它读同一份目录，从一个地方安装产品、插件和资源包。',
+      platform: '平台', requirements: '系统要求',
+      requirementsText: 'Windows 10 或更高版本。这就是全部要求。这些可执行文件只导入 Windows 自带的 DLL —— <code>kernel32</code>、<code>user32</code>、<code>gdi32</code>、<code>winhttp</code> 以及 UCRT 转发器 —— 所以没有运行时要安装，没有框架要下载，除了程序本身也没有别的东西需要保持更新。',
+      requirementsNote: '你需要一个 GitHub 账号和个人访问令牌：这套软件把数据存在 GitHub release 里。如何创建，见<a href="../docs/">文档</a>。',
+      downloadAction: '下载',
+      noBuild: '没有适用于',
+      contents: '目录',
+      unknownProduct: '未知产品',
+      noProductNamed: '没有名为',
+      latestFor: '最新 ——',
+      allAssets: '本版本的全部资产',
+      notesTitle: '发布说明',
+      earlier: '更早的发布',
+      noManifest: '该仓库没有可读的清单。',
+      emptyDrive: '云盘是空的。',
+      entries: '项',
+      recycleBin: '回收站',
+      restoreNote: '还原与彻底删除由桌面程序完成，它能重写清单。本页按设计为只读。',
+      noStorage: '该账户下没有找到存储仓库。',
+      storage: '存储',
+      signIn: '登录', signUp: '注册', token: 'GitHub 个人访问令牌',
+      account: '账户', settings: '设置', cloud: '云盘', docs: '文档',
+      overview: '概览', profile: '账户', linkProduct: '关联产品'
+    }
+  };
+
+  Object.assign(T.en, {
+    docsTitle: 'Documentation',
+    docsLede: 'Read straight out of the project’s own files, so what is written here is what the code says.',
+    sourceAt: 'Source:',
+    notReadable: 'This document could not be read:',
+    publishedIn: 'It is published in the source repository:',
+    notPushedNote: 'A 404 here usually means the document has not been pushed yet rather than that it is missing from the project.',
+    loginTitle: 'Sign in',
+    loginLede: 'This site has no accounts of its own. Signing in means handing it a GitHub personal access token, which it keeps in this browser and uses to read the repositories the suite stores its data in.',
+    tokenHint: 'Kept in this browser’s local storage. It is sent only to api.github.com, never to this site — there is no server here to send it to.',
+    doSignIn: 'Sign in',
+    createToken: 'Create a token',
+    tokenNeeds: 'What the token needs',
+    tokenNeedsText: 'A classic token with the <code>repo</code> scope, or a fine-grained token with read and write access to <em>Contents</em> for the repositories you want the suite to use. Read access alone is enough to browse; uploading needs write.',
+    tokenWarning: 'The token is a password. Treat it like one — the <a href="./link/">link a product</a> page explains how to hand it to a desktop program without pasting it into a chat window.',
+    checking: ' Checking the token…',
+    pasteFirst: 'Paste a token first.',
+    rejected: 'GitHub rejected that token. Check it was copied whole and has not expired.',
+    cloudTitle: 'Cloud',
+    cloudLede: 'The same drive Infinity Cloud shows on the desktop, read out of the same releases. A storage repository holds a manifest named <code>file.json</code>; the manifest names the files, and each file’s parts name the release assets that hold its bytes.',
+    storageLabel: 'Storage',
+    refresh: 'Refresh',
+    driveEmpty: 'The drive is empty.',
+    deleteColumn: 'Deleted',
+    pathColumn: 'Path',
+    typeColumn: 'Type',
+    modifiedColumn: 'Modified',
+    noParts: 'no parts',
+    myselfTitle: 'Account',
+    myselfLede: 'There is no Infinity account to manage. This page shows the GitHub account the suite is acting as, and what it can reach.',
+    repositories: 'Repositories',
+    storageRepos: 'Storage repositories',
+    tokenInUse: 'Token in use',
+    memberSince: 'Member since',
+    yesBrowser: 'yes, in this browser only',
+    signOutTitle: 'Sign out',
+    signOutText: 'Signing out removes the token from this browser. It does not revoke it — revoke it on GitHub if you think it has been seen by somebody else.',
+    settingsTitle: 'Settings',
+    settingsLede: 'These are the preferences of this website in this browser. The desktop programs keep their own, and they are not shared — there is no account for them to be stored against.',
+    downloadsSection: 'Downloads',
+    platformFirst: 'Platform to offer first',
+    showPre: 'Show pre-releases',
+    appearance: 'Appearance',
+    themeLabel: 'Theme',
+    credential: 'Credential',
+    savedRequests: 'Saved requests',
+    resetTitle: 'Reset',
+    noTokenBrowser: 'No token in this browser.',
+    runTitle: 'Run a program',
+    runLede: 'A desktop program opened this page with a request. A web page cannot start a program on your machine, so this page does the two things it actually can: it shows you exactly what is being asked for, and it hands the request to a copy of the suite you already have.',
+    linkTitle: 'Link a product',
+    linkLede: 'A desktop program opens this page to hand over a request: it puts a small payload in the address, this page shows it back, and once you are signed in it passes you to the matching run page.'
+  });
+
+  Object.assign(T.zh, {
+    docsTitle: '文档',
+    docsLede: '直接从项目自己的文件读取，所以这里写的就是代码里说的。',
+    sourceAt: '来源：',
+    notReadable: '该文档无法读取：',
+    publishedIn: '它发布在源码仓库中：',
+    notPushedNote: '这里的 404 通常表示文档还没推送，而不是项目里没有它。',
+    loginTitle: '登录',
+    loginLede: '本站点没有自己的账户。登录就是把一个 GitHub 个人访问令牌交给它，它把这个令牌保存在这个浏览器里，用来读取套件存放数据的那些仓库。',
+    tokenHint: '保存在本浏览器的本地存储中。它只会发给 api.github.com，绝不会发给本站 —— 这里没有服务器可以接收它。',
+    doSignIn: '登录',
+    createToken: '创建令牌',
+    tokenNeeds: '令牌需要什么权限',
+    tokenNeedsText: '经典令牌需要 <code>repo</code> 作用域；细粒度令牌需要对要使用的仓库拥有 <em>Contents</em> 的读写权限。只读足以浏览，上传需要写权限。',
+    tokenWarning: '令牌就是密码。请当密码对待 —— <a href="./link/">关联产品</a>页说明如何把它交给桌面程序，而不必贴进聊天窗口。',
+    checking: ' 正在校验令牌…',
+    pasteFirst: '请先粘贴令牌。',
+    rejected: 'GitHub 拒绝了该令牌。请检查是否完整复制，以及是否过期。',
+    cloudTitle: '云盘',
+    cloudLede: '与桌面端 Infinity Cloud 相同的云盘，从相同的 release 读取。存储仓库里有一份名为 <code>file.json</code> 的清单；清单列出文件，而每个文件的分片指向保存其字节的 release 资产。',
+    storageLabel: '存储',
+    refresh: '刷新',
+    driveEmpty: '云盘是空的。',
+    deleteColumn: '删除时间',
+    pathColumn: '路径',
+    typeColumn: '类型',
+    modifiedColumn: '修改时间',
+    noParts: '无分片',
+    myselfTitle: '账户',
+    myselfLede: '没有什么“Infinity 账户”需要管理。本页显示套件正在以其身份行事的那个 GitHub 账户，以及它能访问的范围。',
+    repositories: '仓库',
+    storageRepos: '存储仓库',
+    tokenInUse: '正在使用的令牌',
+    memberSince: '注册于',
+    yesBrowser: '是，仅在本浏览器',
+    signOutTitle: '退出登录',
+    signOutText: '退出会从这个浏览器移除令牌，但不会吊销它 —— 如果你认为令牌被别人看到过，请到 GitHub 上吊销。',
+    settingsTitle: '设置',
+    settingsLede: '这些是本网站在这个浏览器里的偏好。桌面程序有自己的一套，两者并不共享 —— 没有账户可以用来存放它们。',
+    downloadsSection: '下载',
+    platformFirst: '优先提供的平台',
+    showPre: '显示预发布版本',
+    appearance: '外观',
+    themeLabel: '主题',
+    credential: '凭据',
+    savedRequests: '已保存的请求',
+    resetTitle: '重置',
+    noTokenBrowser: '本浏览器中没有令牌。',
+    runTitle: '运行程序',
+    runLede: '一个桌面程序带着请求打开了本页。网页无法启动你机器上的程序，所以本页只做它真正能做的两件事：把请求内容如实显示出来，并把请求交给你已经安装的那份套件。',
+    linkTitle: '关联产品',
+    linkLede: '桌面程序打开本页来递交一个请求：它把一小段载荷放进地址里，本页把它显示回来，一旦你登录就转到对应的运行页。'
+  });
+
+  // The product pages: the strings shared by all six of them, including the
+  // names cn-mirror needs.
+  Object.assign(T.en, {
+    latestFor: 'Latest —',
+    allAssets: 'All assets in this release',
+    releasesNotes: 'release notes',
+    notes: 'Release notes',
+    earlierReleases: 'Earlier releases',
+    noInstallerFor: 'no installer for',
+    noBuildFor: 'no build for',
+    noAssets: 'This release has no assets.',
+    preRelease: 'pre-release',
+    source: 'source',
+    kind: 'Kind',
+    digest: 'Digest'
+  });
+
+  Object.assign(T.zh, {
+    latestFor: '最新 ——',
+    allAssets: '本版本的全部资产',
+    releasesNotes: '发布说明',
+    notes: '发布说明',
+    earlierReleases: '更早的发布',
+    noInstallerFor: '没有适用于',
+    noBuildFor: '没有适用于',
+    noAssets: '本版本没有资产。',
+    preRelease: '预发布',
+    source: '源码',
+    kind: '类型',
+    digest: '摘要'
+  });
+
+  // The language comes from <html lang>, so a page does not have to know
+  // whether it is the English copy or the Chinese one.
+  function lang() {
+    var declared = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang : '';
+    if (declared && declared.toLowerCase().indexOf('zh') === 0) return 'zh';
+    return 'en';
+  }
+
+  /*
+   * Translate. An unknown key returns the key itself rather than an empty
+   * string - a missing translation that shows up as "downloadsTitle" on the
+   * page is obvious, whereas one that shows up as nothing is invisible.
+   */
+  function t(key) {
+    var table = T[lang()] || T.en;
+    if (key in table) return table[key];
+    return (key in T.en) ? T.en[key] : key;
+  }
 
   var DEFAULT_SETTINGS = {
     theme: 'dark',
@@ -200,21 +474,73 @@
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
-  function link(href, text, className) {
-    return el('a', { href: href, class: className || null, text: text });
+  /*
+   * One link helper, and it decides where the link opens.
+   *
+   * Anything that is not this site opens in a new tab, because following a link
+   * to github.com and losing the page you were reading is worse than an extra
+   * tab. `rel="noopener"` goes with every one of them: without it the page that
+   * opens gets a handle back on this one.
+   */
+  function isExternal(href) {
+    if (!href) return false;
+    if (href.charAt(0) === '#' || href.charAt(0) === '.') return false;
+    if (href.indexOf(BASE + '/') === 0 || href.indexOf(BASE) === 0) return false;
+    return /^https?:/i.test(href);
   }
 
-  function page(route) { return BASE + route; }
+  function link(href, text, className) {
+    var node = el('a', { href: href, class: className || null, text: text });
+    if (isExternal(href)) {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener');
+    }
+    return node;
+  }
+
+  /*
+   * A route inside the site, in whichever language this page is in.
+   *
+   * The Chinese copy lives at /infinity/cn/ and is otherwise identical, so
+   * every link has to come back to the language the reader is already in -
+   * nav, breadcrumbs, the sign-in redirect and the product pages all go
+   * through here. A page therefore never needs to know which directory it
+   * sits in.
+   */
+  function page(route) {
+    return (inChinese() ? BASE + '/cn' : BASE) + route;
+  }
 
   // ------------------------------------------------------------ chrome
 
   var NAV = [
-    { route: '/', label: 'Overview' },
-    { route: '/download/', label: 'Download' },
-    { route: '/docs/', label: 'Docs' },
-    { route: '/cloud/', label: 'Cloud' },
-    { route: '/settings/', label: 'Settings' }
+    { route: '/', key: 'overview' },
+    { route: '/download/', key: 'downloadTitle' },
+    { route: '/docs/', key: 'docs' },
+    { route: '/cloud/', key: 'cloud' },
+    { route: '/settings/', key: 'settings' }
   ];
+
+  /*
+   * The other language is the same route with /cn/ added or removed. Working
+   * it out from the path means a new page needs no entry anywhere: it is
+   * bilingual as soon as both copies exist.
+   */
+  function inChinese() { return location.pathname.indexOf('/cn/') >= 0; }
+
+  function otherLanguageHref() {
+    var path = location.pathname;
+    var suffix = location.search || '';
+    if (inChinese()) return path.replace('/cn/', '/') + suffix;
+    // Insert /cn/ right after the site base.
+    if (path.indexOf(BASE) === 0) {
+      var rest = path.slice(BASE.length);
+      return BASE + '/cn' + (rest === '' || rest === '/' ? '/' : rest) + suffix;
+    }
+    return path + suffix;
+  }
+
+  function labelForOtherLanguage() { return lang() === 'zh' ? 'English' : '中文'; }
 
   function nav(active) {
     var bar = el('div', { class: 'inner' });
@@ -224,12 +550,18 @@
     var list = el('nav');
     NAV.forEach(function (item) {
       var current = active === item.route;
-      list.appendChild(link(page(item.route), item.label, current ? 'current' : null))
+      list.appendChild(link(page(item.route), t(item.key), current ? 'current' : null))
         .setAttribute('aria-current', current ? 'page' : 'false');
     });
     var who = el('div', { class: 'who' });
     bar.appendChild(brand);
     bar.appendChild(list);
+    // The other language, one click. The Chinese copy lives under /cn/ and
+    // everything else is identical, so the switch is a path rewrite: take the
+    // current route and move it in or out of /cn/.
+    var other = el('a', { class: 'lang', href: otherLanguageHref(), title: labelForOtherLanguage() },
+      [labelForOtherLanguage()]);
+    bar.appendChild(other);
     bar.appendChild(who);
     var header = el('header', { class: 'site' }, [bar]);
     document.body.insertBefore(header, document.body.firstChild);
@@ -473,9 +805,27 @@
     return out;
   }
 
+  /*
+   * Fill in every element carrying data-t="key".
+   *
+   * This is the one place markup is written from a string. It is allowed
+   * because the strings come from the table above, which is part of this site -
+   * not from GitHub, not from a package name, not from anything a user typed.
+   * Anything that did come from outside is still written with textContent.
+   */
+  function applyTranslations() {
+    var nodes = document.querySelectorAll('[data-t]');
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var key = node.getAttribute('data-t');
+      if (key) node.innerHTML = t(key);
+    }
+  }
+
   window.INFINITY = {
     BASE: BASE,
     PRODUCTS: PRODUCTS,
+    applyTranslations: applyTranslations,
     page: page,
     el: el,
     clear: clear,
@@ -488,6 +838,10 @@
     gh: gh,
     releases: releases,
     repoInfo: repoInfo,
+    t: t,
+    lang: lang,
+    inChinese: inChinese,
+    otherLanguageHref: otherLanguageHref,
     fmtSize: fmtSize,
     fmtDate: fmtDate,
     fmtCount: fmtCount,

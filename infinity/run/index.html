@@ -69,7 +69,7 @@
 
   if (!runId) {
     actHost.appendChild(I.el('div', { class: 'note warn', text:
-      'This address carries no run id. A program opens this page with one; opened by hand it has none.' }));
+      'This address carries no run id.' }));
     actHost.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'Downloads')]));
     return;
   }

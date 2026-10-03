@@ -1,39 +1,53 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Infinity.Inc — the Infinity suite</title>
-<meta name="description" content="Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager: Windows applications that need nothing but Windows.">
-<link rel="stylesheet" href="./assets/site.css">
+<title>Infinity.Inc — Infinity 套件</title>
+<meta name="description" content="Infinity Cloud、Infinity File Manager、InfinityPackageManager、Infinity Toolbox、Infinity Installer Manager 与 Infinity Games：只需要 Windows 的 Windows 应用。">
+<link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <main id="app">
-  <h1 data-t="suiteTitle">The Infinity suite</h1>
-  <p class="lede" data-t="suiteLede">Six Windows applications that need nothing but Windows. No runtime, no
-  DLL to install beside them, no installer required to get them running — each product is a
-  single executable of a few hundred kilobytes.</p>
+  <h1 data-t="suiteTitle"></h1>
+  <p class="lede" data-t="suiteLede"></p>
 
   <section class="stack" id="products">
-    <h2 data-t="products">Products</h2>
+    <h2 data-t="products"></h2>
     <div class="grid" id="grid"></div>
   </section>
 
   <section class="stack" id="latest">
-    <h2 data-t="latest">Latest releases</h2>
+    <h2 data-t="latest"></h2>
     <div id="releases"></div>
   </section>
 
-
+  <section class="stack">
+    <h2 data-t="howItFits"></h2>
+    <div class="grid">
+      <div class="card">
+        <h3 data-t="twoFaces"></h3>
+        <p class="muted" data-t="twoFacesText"></p>
+      </div>
+      <div class="card">
+        <h3 data-t="oneCatalogue"></h3>
+        <p class="muted" data-t="oneCatalogueText"></p>
+      </div>
+      <div class="card">
+        <h3 data-t="unverified"></h3>
+        <p class="muted" data-t="unverifiedText"></p>
+      </div>
+    </div>
+  </section>
 </main>
 
-<script src="./assets/site.js"></script>
+<script src="../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/');
   I.footer();
-  I.applyTranslations();
 
   var grid = document.getElementById('grid');
   I.PRODUCTS.forEach(function (p) {
@@ -45,18 +59,17 @@
   });
 
   var host = document.getElementById('releases');
-  I.loading(host, 'Reading releases…');
+  I.loading(host, I.t('reading'));
 
-  var wanted = I.PRODUCTS.slice(0, 5);
-  Promise.all(wanted.map(function (p) {
+  Promise.all(I.PRODUCTS.map(function (p) {
     return I.releases(p.repo).then(function (list) { return { product: p, list: list || [] }; })
       .catch(function (e) { return { product: p, list: [], error: e.message }; });
   })).then(function (results) {
     I.clear(host);
     var table = I.el('table');
     var head = I.el('tr');
-    ['Product', 'Version', 'Published', 'Assets', ''].forEach(function (t, i) {
-      head.appendChild(I.el('th', { class: i === 3 ? 'num' : null, text: t }));
+    [I.t('product'), I.t('version'), I.t('published'), I.t('assets'), ''].forEach(function (text, i) {
+      head.appendChild(I.el('th', { class: i === 3 ? 'num' : null, text: text }));
     });
     table.appendChild(I.el('thead', null, [head]));
     var body = I.el('tbody');
@@ -64,27 +77,26 @@
     results.forEach(function (r) {
       var latest = r.list.filter(function (x) { return !x.draft; })[0];
       var row = I.el('tr');
-      row.appendChild(I.el('td', null, [I.link(I.page('/download/' + r.product.slug + '/'), r.product.name)]));
+      row.appendChild(I.el('td', null, [
+        I.link(I.page('/download/' + r.product.slug + '/'), r.product.name)
+      ]));
       if (!latest) {
         row.appendChild(I.el('td', { class: 'faint', text: '—' }));
-        row.appendChild(I.el('td', { class: 'faint', text: r.error ? 'unavailable' : 'no releases' }));
+        row.appendChild(I.el('td', { class: 'faint', text: r.error ? I.t('unavailable') : I.t('noReleases') }));
         row.appendChild(I.el('td', { class: 'num faint', text: '0' }));
         row.appendChild(I.el('td'));
       } else {
         row.appendChild(I.el('td', { class: 'mono', text: latest.tag_name || '' }));
         row.appendChild(I.el('td', { class: 'muted', text: I.fmtDate(latest.published_at) }));
         row.appendChild(I.el('td', { class: 'num', text: I.fmtCount((latest.assets || []).length) }));
-        row.appendChild(I.el('td', null, [
-          I.link(latest.html_url, 'release notes', 'small')
-        ]));
+        row.appendChild(I.el('td', null, [I.link(latest.html_url, I.t('releaseNotes'), 'small')]));
       }
       body.appendChild(row);
     });
 
     table.appendChild(body);
     host.appendChild(table);
-    host.appendChild(I.el('p', { class: 'small faint', text:
-      'Read live from GitHub. A product with no releases is shown as such rather than offered.' }));
+    host.appendChild(I.el('p', { class: 'small faint', text: I.t('liveNote') }));
   });
 })();
 </script>

@@ -24,53 +24,9 @@
     <div id="releases"></div>
   </section>
 
-  <section class="stack">
-    <h2>How it fits together</h2>
-    <div class="grid">
-      <div class="card">
-        <h3>Two faces, one executable</h3>
-        <p class="muted">Every product has a command line (<code>&lt;p&gt;_cli.exe</code>) and a
-        window (<code>&lt;p&gt;_gui.exe</code>). The window is Electron rendering a page served by
-        the same executable, so the executable is still the whole program. The terminal interface
-        was removed: it duplicated the window without being better at anything.</p>
-      </div>
-      <div class="card">
-        <h3>One catalogue</h3>
-        <p class="muted">Products, plugins and resource packs all come from one index — a GitHub
-        repository where each release is a catalogue page. Infinity Installer Manager is the
-        single entry point that reads it.</p>
-      </div>
-      <div class="card">
-        <h3>Nothing runs unverified</h3>
-        <p class="muted">A package is only installed if the SHA-256 of the bytes on disk matches
-        the digest GitHub reports for that asset. A build with no digest is refused rather than
-        trusted.</p>
-      </div>
-    </div>
-  </section>
 
-  <section class="stack">
-    <h2>Where to start</h2>
-    <div class="grid">
-      <div class="card">
-        <h3>If you want everything</h3>
-        <p class="muted">Install
-        <a href="./infinity/download/infinityinstallmanager/">Infinity Installer Manager</a>.
-        It is the single entry point: one catalogue covering the products, the plugins they drive
-        and the resource packs they load.</p>
-      </div>
-      <div class="card">
-        <h3>If you want one thing</h3>
-        <p class="muted">Every product installs on its own. Pick it from
-        <a href="./infinity/download/">the download page</a> and ignore the rest.</p>
-      </div>
-      <div class="card">
-        <h3>If you want to read first</h3>
-        <p class="muted">The <a href="./infinity/docs/">documentation</a> is the project's own
-        files, rendered as they are — what is written there is what the code says.</p>
-      </div>
-    </div>
-  </section>
+
+
 </main>
 
 <script src="./infinity/assets/site.js"></script>

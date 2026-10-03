@@ -1,28 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cloud — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
+<title>云盘 — Infinity.Inc</title>
+<meta name="description" content="Infinity Cloud 在桌面上显示的同一个云盘，从同一批 release 里读出来。">
+<link rel="stylesheet" href="../../assets/site.css">
 </head>
 <body>
 <main id="app">
-  <h1>Cloud</h1>
-  <p class="lede">The same drive Infinity Cloud shows on the desktop, read out of the same
-  releases. A storage repository holds a manifest named <code>file.json</code>; the manifest names
-  the files, and each file's parts name the release assets that hold its bytes.</p>
+  <h1 data-t="cloud"></h1>
+  <p class="lede" data-t="cloudLede"></p>
 
   <div id="gate"></div>
 
   <div id="view" hidden>
     <div class="spread" style="margin-bottom:16px">
       <div class="row">
-        <label for="store" class="small muted" style="margin:0">Storage</label>
+        <label for="store" class="small muted" style="margin:0" data-t="storage"></label>
         <select id="store" style="width:auto"></select>
       </div>
       <div class="row">
-        <button class="btn ghost small" id="reload">Refresh</button>
+        <button class="btn ghost small" id="reload" data-t="refresh"></button>
       </div>
     </div>
     <div id="summary" class="small muted" style="margin-bottom:12px"></div>
@@ -31,10 +30,11 @@
   </div>
 </main>
 
-<script src="../assets/site.js"></script>
+<script src="../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/cloud/');
   I.footer();
 
@@ -48,20 +48,6 @@
 
   if (!I.requireAuth(I.page('/cloud/'))) return;
 
-  function base64ToText(content) {
-    var bin = atob(String(content).replace(/\n/g, ''));
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder('utf-8').decode(bytes);
-  }
-
-  /*
-   * Read the manifest. The asset endpoint answers 302 to a host that does not
-   * send CORS headers, so this can fail in a browser where it succeeds in the
-   * desktop program. That is reported as itself rather than as "no files",
-   * because those are different things and only one of them means the drive
-   * is empty.
-   */
   function readManifest(repo, release) {
     var asset = null;
     (release.assets || []).forEach(function (a) { if (a.name === 'file.json') asset = a; });
@@ -75,7 +61,7 @@
       .then(function (text) {
         var doc = null;
         try { doc = JSON.parse(text); } catch (e) { doc = null; }
-        if (!doc) throw new Error('the manifest is not readable JSON');
+        if (!doc) throw new Error(I.t('manifestNotJson'));
         return doc;
       });
   }
@@ -101,7 +87,7 @@
   }
 
   function fmtType(entry) {
-    return entry.type === 'folder' ? 'folder' : 'file';
+    return entry.type === 'folder' ? I.t('folderWord') : I.t('fileWord');
   }
 
   function renderTree(loaded) {
@@ -109,10 +95,9 @@
     I.clear(trashHost);
 
     if (!loaded.manifest) {
-      tree.appendChild(I.el('div', { class: 'note warn', text:
-        'No manifest could be read here.' }));
+      tree.appendChild(I.el('div', { class: 'note warn', text: I.t('noManifest') }));
       tree.appendChild(I.el('p', { class: 'small muted' }, [
-        'The repository itself: ',
+        I.t('repoItself') + ' ',
         I.link('https://github.com/zssx-2026/' + loaded.repo.name, 'zssx-2026/' + loaded.repo.name)
       ]));
       return;
@@ -123,19 +108,22 @@
     var total = 0;
     paths.forEach(function (p) { total += Number(files[p].size || 0); });
 
-    summary.textContent = paths.length + ' entries · ' + I.fmtSize(total) +
-      ' · volume ' + (loaded.manifest.volume || 1) +
-      ' · updated ' + I.fmtDate(new Date(Number(loaded.manifest.updated || 0)).toISOString());
+    summary.textContent = paths.length + ' ' + I.t('entries') + ' · ' + I.fmtSize(total) +
+      ' · ' + I.t('volumeWord') + ' ' + (loaded.manifest.volume || 1) +
+      ' · ' + I.t('updatedWord') + ' ' +
+      I.fmtDate(new Date(Number(loaded.manifest.updated || 0)).toISOString());
 
     if (!paths.length) {
-      tree.appendChild(I.el('div', { class: 'empty', text: 'The drive is empty.' }));
+      tree.appendChild(I.el('div', { class: 'empty', text: I.t('emptyDrive') }));
     } else {
       paths.sort();
       var table = I.el('table');
       table.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: 'Path' }), I.el('th', { text: 'Type' }),
-        I.el('th', { class: 'num', text: 'Size' }),
-        I.el('th', { text: 'Modified' }), I.el('th')
+        I.el('th', { text: I.t('pathWord') }),
+        I.el('th', { text: I.t('typeWord') }),
+        I.el('th', { class: 'num', text: I.t('size') }),
+        I.el('th', { text: I.t('modifiedWord') }),
+        I.el('th')
       ])]));
       var body = I.el('tbody');
       paths.forEach(function (p) {
@@ -154,12 +142,15 @@
           // the download URL is built from those rather than searched for.
           var href = 'https://github.com/zssx-2026/' + parts[0].repo +
             '/releases/download/' + parts[0].release + '/' + encodeURIComponent(parts[0].asset);
-          cell.appendChild(I.el('a', { class: 'btn small ghost', href: href, text: 'Download' }));
+          cell.appendChild(I.el('a', {
+            class: 'btn small ghost', href: href, text: I.t('downloadAction')
+          }));
           if (parts.length > 1) {
-            cell.appendChild(I.el('span', { class: 'small faint', text: ' ' + parts.length + ' parts' }));
+            cell.appendChild(I.el('span', { class: 'small faint', text:
+              ' ' + parts.length + ' ' + I.t('partsWord') }));
           }
         } else {
-          cell.appendChild(I.el('span', { class: 'small faint', text: 'no parts' }));
+          cell.appendChild(I.el('span', { class: 'small faint', text: I.t('noParts') }));
         }
         row.appendChild(cell);
         body.appendChild(row);
@@ -171,11 +162,12 @@
     var trash = loaded.manifest.trash || {};
     var trashed = Object.keys(trash);
     if (trashed.length) {
-      trashHost.appendChild(I.el('h2', { style: 'margin-top:28px', text: 'Recycle bin' }));
+      trashHost.appendChild(I.el('h2', { style: 'margin-top:28px', text: I.t('recycleBin') }));
       var tt = I.el('table');
       tt.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: 'Path' }), I.el('th', { class: 'num', text: 'Size' }),
-        I.el('th', { text: 'Deleted' })
+        I.el('th', { text: I.t('pathWord') }),
+        I.el('th', { class: 'num', text: I.t('size') }),
+        I.el('th', { text: I.t('deletedWord') })
       ])]));
       var tb = I.el('tbody');
       trashed.forEach(function (p) {
@@ -189,9 +181,7 @@
       });
       tt.appendChild(tb);
       trashHost.appendChild(tt);
-      trashHost.appendChild(I.el('p', { class: 'small faint', text:
-        'Restoring and purging are done from the desktop program, which can rewrite the manifest. ' +
-        'This page is read-only by design.' }));
+      trashHost.appendChild(I.el('p', { class: 'small faint', text: I.t('restoreNote') }));
     }
   }
 
@@ -201,17 +191,18 @@
     stores.forEach(function (s) { if (s.name === name) repo = s; });
     if (!repo) return;
 
-    I.loading(tree, 'Reading the manifest…');
+    I.loading(tree, I.t('readingManifest'));
     I.clear(trashHost);
     summary.textContent = '';
 
     loadStore(repo).then(renderTree).catch(function (e) {
       I.clear(tree);
-      tree.appendChild(I.el('div', { class: 'note bad', text: 'Could not read the drive: ' + e.message }));
+      tree.appendChild(I.el('div', { class: 'note bad', text:
+        I.t('driveFailed') + ' ' + e.message }));
     });
   }
 
-  I.loading(gate, 'Finding your storage repositories…');
+  I.loading(gate, I.t('findingStores'));
 
   I.gh('/user/repos?per_page=100&affiliation=owner&sort=updated')
     .then(function (repos) {
@@ -219,20 +210,24 @@
       I.clear(gate);
 
       if (!stores.length) {
-        gate.appendChild(I.el('div', { class: 'note', text:
-          'No storage repository found.' }));
-        gate.appendChild(I.el('p', null, [I.link(I.page('/download/infinitycloud/'), 'Get Infinity Cloud')]));
+        gate.appendChild(I.el('div', { class: 'note', text: I.t('noStorage') }));
+        gate.appendChild(I.el('p', null, [
+          I.link(I.page('/download/infinitycloud/'), I.t('getInfinityCloud'))
+        ]));
         return;
       }
 
       stores.forEach(function (r) {
-        storeSelect.appendChild(I.el('option', { value: r.name, text: r.name + ' (' + r.private + ')' }));
+        storeSelect.appendChild(I.el('option', {
+          value: r.name,
+          text: r.name + '（' + (r.private ? I.t('privateWord') : I.t('publicWord')) + '）'
+        }));
       });
       view.hidden = false;
       load();
     })
     .catch(function (e) {
-      I.failure(gate, 'Could not list your repositories: ' + e.message);
+      I.failure(gate, I.t('reposFailed') + ' ' + e.message);
     });
 
   storeSelect.addEventListener('change', load);

@@ -1,33 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Link a product — Infinity.Inc</title>
-<link rel="stylesheet" href="../../assets/site.css">
+<title>关联产品 — Infinity.Inc</title>
+<meta name="description" content="桌面程序打开这个页面来交出一个请求：它把一小段载荷放进地址里，本页把它显示回来。">
+<link rel="stylesheet" href="../../../assets/site.css">
 </head>
 <body>
 <main id="app" style="max-width:640px">
-  <h1>Link a product</h1>
-  <p class="lede">A desktop program opens this page to hand over a request: it puts a small
-  payload in the address, this page shows it back, and once you are signed in it passes you to
-  the matching run page.</p>
+  <h1 data-t="linkProduct"></h1>
+  <p class="lede" data-t="linkLede"></p>
 
   <div class="card" id="payload">
-    <h3>The request</h3>
+    <h3 data-t="requestTitle"></h3>
     <div id="body"></div>
   </div>
 
   <div class="card" id="actions">
-    <h3>What happens next</h3>
+    <h3 data-t="whatHappensNext"></h3>
     <div id="next"></div>
   </div>
 </main>
 
-<script src="../../assets/site.js"></script>
+<script src="../../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/login/link/');
   I.footer();
 
@@ -52,41 +52,35 @@
   }
 
   I.clear(body);
-  body.appendChild(row('Link id', linkId || '(none)', true));
-  body.appendChild(row('Payload', decoded ? decoded.slice(0, 400) : '(could not be decoded)', true));
+  body.appendChild(row(I.t('linkIdLabel'), linkId || I.t('noneWord'), true));
+  body.appendChild(row(I.t('payloadLabel'), decoded ? decoded.slice(0, 400) : I.t('payloadUndecodable'), true));
   if (decoded.length > 400) {
     body.appendChild(I.el('p', { class: 'small faint', text:
-      'Showing the first 400 characters of ' + decoded.length + '.' }));
+      I.t('showingFirst') + ' 400 ' + I.t('charactersOf') + ' ' + decoded.length + '。' }));
   }
 
   I.clear(next);
 
   if (!decoded && !linkId) {
-    next.appendChild(I.el('div', { class: 'note warn', text:
-      'There is no request in this address. A program opens this page with an id and a payload; ' +
-      'opened by hand it has neither.' }));
-    next.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'Downloads')]));
+    next.appendChild(I.el('div', { class: 'note warn', text: I.t('noRequestHere') }));
+    next.appendChild(I.el('p', null, [I.link(I.page('/download/'), I.t('downloadTitle'))]));
     return;
   }
 
   if (!I.token()) {
-    next.appendChild(I.el('div', { class: 'note', text:
-      'Sign in to continue.' }));
-    var toLogin = I.el('a', {
-      class: 'btn',
+    next.appendChild(I.el('div', { class: 'note', text: I.t('signInToContinue') }));
+    next.appendChild(I.el('a', {
+      class: 'btn', text: I.t('signInAndContinue'),
       href: I.page('/login/') + '?next=' + encodeURIComponent(location.pathname + location.search)
-    }, ['Sign in and continue']);
-    next.appendChild(toLogin);
+    }));
   } else {
-    var toRun = I.el('a', {
-      class: 'btn',
+    next.appendChild(I.el('a', {
+      class: 'btn', text: I.t('continueToRun'),
       href: I.page('/run/') + encodeURIComponent(linkId) + '/?=' + encodeURIComponent(raw)
-    }, ['Continue to the run page']);
-    next.appendChild(toRun);
-    next.appendChild(I.el('p', { class: 'small muted', style: 'margin-top:12px' }, [
-      'Signed in as ' + (I.user() ? I.user().login : 'this browser') + '. ',
-      'The run page shows what the request is for before anything happens.'
-    ]));
+    }));
+    next.appendChild(I.el('p', { class: 'small muted', style: 'margin-top:12px', text:
+      I.t('signedInAs') + ' ' + (I.user() ? I.user().login : I.t('thisBrowser')) +
+      '。' + I.t('runExplains') }));
   }
 
   // Being signed in already is the common case when a program reopens this
