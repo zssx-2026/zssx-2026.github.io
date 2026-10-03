@@ -3,39 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>zssx-2026</title>
-<meta name="description" content="The Infinity suite: five Windows applications that need nothing but Windows. Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager.">
+<title>Infinity.Inc — the Infinity suite</title>
+<meta name="description" content="Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager: Windows applications that need nothing but Windows.">
 <link rel="stylesheet" href="./infinity/assets/site.css">
-<style>
-  /* Only what the root page needs and no other page does. Everything else
-     comes from the shared stylesheet so the front door and the rooms behind
-     it look like the same building. */
-  .hero { padding: 48px 0 8px; }
-  .hero h1 { font-size: 44px; letter-spacing: -.02em; margin-bottom: 12px; }
-  .hero .lede { font-size: 19px; max-width: 60ch; }
-  .hero .row { margin-top: 26px; }
-  .stack { margin-top: 44px; }
-  .suite { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-  @media (max-width: 640px) { .hero h1 { font-size: 32px; } }
-</style>
 </head>
 <body>
 <main id="app">
-  <section class="hero">
-    <h1>Infinity.Inc</h1>
-    <p class="lede">Five Windows applications that need nothing but Windows. Each one is a single
-    self-contained executable of a few hundred kilobytes — no runtime, no framework, no DLL to
-    install beside it.</p>
-    <div class="row">
-      <a class="btn" href="./infinity/">Open the site</a>
-      <a class="btn ghost" href="./infinity/download/">Download</a>
-      <a class="btn ghost" href="./infinity/docs/">Documentation</a>
-    </div>
+  <h1>The Infinity suite</h1>
+  <p class="lede">Five Windows applications that need nothing but Windows. No runtime, no
+  DLL to install beside them, no installer required to get them running — each product is a
+  single executable of a few hundred kilobytes.</p>
+
+  <section class="stack" id="products">
+    <h2>Products</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="stack" id="latest">
+    <h2>Latest releases</h2>
+    <div id="releases"></div>
   </section>
 
   <section class="stack">
-    <h2>The suite</h2>
-    <div class="suite" id="suite"></div>
+    <h2>How it fits together</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Two faces, one executable</h3>
+        <p class="muted">Every product has a command line (<code>&lt;p&gt;_cli.exe</code>) and a
+        window (<code>&lt;p&gt;_gui.exe</code>). The window is Electron rendering a page served by
+        the same executable, so the executable is still the whole program. The terminal interface
+        was removed: it duplicated the window without being better at anything.</p>
+      </div>
+      <div class="card">
+        <h3>One catalogue</h3>
+        <p class="muted">Products, plugins and resource packs all come from one index — a GitHub
+        repository where each release is a catalogue page. Infinity Installer Manager is the
+        single entry point that reads it.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing runs unverified</h3>
+        <p class="muted">A package is only installed if the SHA-256 of the bytes on disk matches
+        the digest GitHub reports for that asset. A build with no digest is refused rather than
+        trusted.</p>
+      </div>
+    </div>
   </section>
 
   <section class="stack">
@@ -69,13 +80,58 @@
   I.nav('/');
   I.footer();
 
-  var suite = document.getElementById('suite');
+  var grid = document.getElementById('grid');
   I.PRODUCTS.forEach(function (p) {
-    suite.appendChild(I.el('a', { class: 'product', href: './infinity/download/' + p.slug + '/' }, [
+    grid.appendChild(I.el('a', { class: 'product', href: './infinity/download/' + p.slug + '/' }, [
       I.el('div', { class: 'tag', text: p.short }),
       I.el('h3', { text: p.name }),
       I.el('p', { text: p.tagline })
     ]));
+  });
+
+  var host = document.getElementById('releases');
+  I.loading(host, 'Reading releases…');
+
+  Promise.all(I.PRODUCTS.map(function (p) {
+    return I.releases(p.repo).then(function (list) { return { product: p, list: list || [] }; })
+      .catch(function (e) { return { product: p, list: [], error: e.message }; });
+  })).then(function (results) {
+    I.clear(host);
+    var table = I.el('table');
+    table.appendChild(I.el('thead', null, [I.el('tr', null, [
+      I.el('th', { text: 'Product' }),
+      I.el('th', { text: 'Version' }),
+      I.el('th', { text: 'Published' }),
+      I.el('th', { class: 'num', text: 'Assets' }),
+      I.el('th')
+    ])]));
+    var body = I.el('tbody');
+
+    results.forEach(function (r) {
+      var latest = r.list.filter(function (x) { return !x.draft; })[0];
+      var row = I.el('tr');
+      row.appendChild(I.el('td', null, [
+        I.link('./infinity/download/' + r.product.slug + '/', r.product.name),
+        I.el('div', { class: 'small faint', text: r.product.short })
+      ]));
+      if (!latest) {
+        row.appendChild(I.el('td', { class: 'faint', text: '—' }));
+        row.appendChild(I.el('td', { class: 'faint', text: r.error ? 'unavailable' : 'no releases' }));
+        row.appendChild(I.el('td', { class: 'num faint', text: '0' }));
+        row.appendChild(I.el('td', { class: 'small faint', text: 'nothing published yet' }));
+      } else {
+        row.appendChild(I.el('td', { class: 'mono', text: latest.tag_name || '' }));
+        row.appendChild(I.el('td', { class: 'muted', text: I.fmtDate(latest.published_at) }));
+        row.appendChild(I.el('td', { class: 'num', text: I.fmtCount((latest.assets || []).length) }));
+        row.appendChild(I.el('td', null, [I.link(latest.html_url, 'release notes', 'small')]));
+      }
+      body.appendChild(row);
+    });
+
+    table.appendChild(body);
+    host.appendChild(table);
+    host.appendChild(I.el('p', { class: 'small faint', text:
+      'Read live from GitHub. A product with no releases is shown as such rather than offered.' }));
   });
 })();
 </script>
