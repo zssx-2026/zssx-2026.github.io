@@ -62,11 +62,26 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
 
-  /* <Product>_<version>_<platform>_<kind>.<ext> */
+  /*
+   * Assets are named <Product>_<version>_<platform>_<kind>.<ext> now, and
+   * <Product>_<platform>_<kind>.<ext> in the first releases. Both are read,
+   * and the hash sidecars that sit next to an asset are not files to offer.
+   */
+  var PLATFORMS = /^(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)$/i;
+  function normalisePlatform(p) { return p.toLowerCase().replace(/^win-/, ''); }
+
   function parseAsset(name) {
-    var m = /^(.+?)_([0-9][^_]*)_(win64|win32|x86|arm64|x64)_([a-z]+)\.[a-z0-9]+$/i.exec(name);
-    if (!m) return null;
-    return { name: name, version: m[2], platform: m[3].toLowerCase(), kind: m[4].toLowerCase() };
+    if (/_hash\.txt$|\.hash(es)?$/i.test(name)) return null;
+    var base = name.replace(/\.(exe|msi|zip|7z|tar\.gz|dmg|deb|appimage)$/i, '');
+    var versioned = /^(.+?)_([0-9][^_]*)_(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)_([a-z0-9-]+)$/i.exec(base);
+    if (versioned) {
+      return { name: name, version: versioned[2], platform: normalisePlatform(versioned[3]), kind: versioned[4].toLowerCase() };
+    }
+    var legacy = /^(.+?)_(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)(?:_([a-z0-9-]+))?$/i.exec(base);
+    if (legacy) {
+      return { name: name, version: '', platform: normalisePlatform(legacy[2]), kind: (legacy[3] || 'other').toLowerCase() };
+    }
+    return null;
   }
 
   function el(tag, attrs, kids) { return I.el(tag, attrs, kids); }
