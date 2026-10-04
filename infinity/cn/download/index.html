@@ -6,6 +6,7 @@
 <title>下载 — Infinity.Inc</title>
 <meta name="description" content="下载 Infinity Cloud、Infinity File Manager、InfinityPackageManager、Infinity Toolbox、Infinity Installer Manager 与 Infinity Games。">
 <link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/guard.js"></script>
 </head>
 <body>
 <main id="app">
@@ -13,26 +14,7 @@
   <p class="lede" data-t="downloadLede"></p>
 
   <section class="stack">
-    <div class="spread">
-      <h2 data-t="products"></h2>
-      <div class="row">
-        <label for="platform" class="small muted" style="margin:0" data-t="platform"></label>
-        <select id="platform" style="width:auto">
-          <option value="win64" data-t="platformWin64"></option>
-          <option value="winx86" data-t="platformX86"></option>
-          <option value="win-arm64" data-t="platformArm"></option>
-        </select>
-      </div>
-    </div>
-    <div id="list"></div>
-  </section>
-
-  <section class="stack">
-    <h2 data-t="requirements"></h2>
-    <div class="card">
-      <p data-t="requirementsText"></p>
-      <p class="muted small" data-t="requirementsNote"></p>
-    </div>
+    <div class="grid" id="cards"></div>
   </section>
 </main>
 
@@ -43,75 +25,7 @@
   I.applyTranslations();
   I.nav('/download/');
   I.footer();
-
-  var host = document.getElementById('list');
-  var select = document.getElementById('platform');
-  var settings = I.settings();
-  select.value = settings.downloadPlatform;
-  select.addEventListener('change', function () {
-    I.saveSettings({ downloadPlatform: select.value });
-    load(select.value);
-  });
-
-  function load(platform) {
-    I.loading(host, I.t('reading'));
-
-    Promise.all(I.PRODUCTS.map(function (p) {
-      return I.releases(p.repo).then(function (list) { return { p: p, list: list || [] }; })
-        .catch(function (e) { return { p: p, list: [], error: e.message }; });
-    })).then(function (results) {
-      I.clear(host);
-      var table = I.el('table');
-      table.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: I.t('product') }),
-        I.el('th', { text: I.t('version') }),
-        I.el('th', { text: I.t('published') }),
-        I.el('th', { class: 'num', text: I.t('size') }),
-        I.el('th')
-      ])]));
-      var body = I.el('tbody');
-
-      results.forEach(function (r) {
-        var latest = r.list.filter(function (x) { return !x.draft; })[0];
-        var row = I.el('tr');
-        row.appendChild(I.el('td', null, [
-          I.link(I.page('/download/' + r.p.slug + '/'), r.p.name),
-          I.el('div', { class: 'small faint', text: r.p.short })
-        ]));
-
-        if (!latest) {
-          row.appendChild(I.el('td', { class: 'faint', text: '—' }));
-          row.appendChild(I.el('td', { class: 'faint', text: r.error ? I.t('unavailable') : I.t('noReleases') }));
-          row.appendChild(I.el('td', { class: 'num faint', text: '—' }));
-          row.appendChild(I.el('td', { class: 'small faint', text: I.t('nothingYet') }));
-        } else {
-          var assets = I.assetsFor(latest, platform);
-          row.appendChild(I.el('td', { class: 'mono', text: latest.tag_name || '' }));
-          row.appendChild(I.el('td', { class: 'muted', text: I.fmtDate(latest.published_at) }));
-          row.appendChild(I.el('td', { class: 'num', text: assets.length ? I.fmtSize(assets[0].size) : '—' }));
-          var cell = I.el('td');
-          if (assets.length) {
-            cell.appendChild(I.el('a', {
-              class: 'btn small', href: assets[0].browser_download_url, text: I.t('downloadAction')
-            }));
-          } else {
-            cell.appendChild(I.el('span', {
-              class: 'small faint', text: I.t('noBuild') + ' ' + platform
-            }));
-          }
-          row.appendChild(cell);
-        }
-        body.appendChild(row);
-      });
-
-      table.appendChild(body);
-      host.appendChild(table);
-    }).catch(function (e) {
-      I.failure(host, I.t('releasesFailed') + ' ' + e.message);
-    });
-  }
-
-  load(settings.downloadPlatform);
+  I.cards(document.getElementById('cards'));
 })();
 </script>
 </body>

@@ -31,33 +31,48 @@
   var MARK = '/assets/site.js';
   var BASE = SELF.indexOf(MARK) >= 0 ? SELF.slice(0, SELF.indexOf(MARK)) : '/infinity';
 
+  // The same base, as a path. Once the browser has resolved
+  // document.currentScript.src, BASE is an absolute URL, so it can never be a
+  // prefix of location.pathname - comparing the two is what made the English
+  // "中文" switch point back at the page it was already on.
+  var BASE_PATH = '/infinity';
+  try {
+    BASE_PATH = new URL(BASE, location.href).pathname.replace(/\/+$/, '') || '/infinity';
+  } catch (e) { /* keep the fallback */ }
+
   var TOKEN_KEY = 'infinity.token';
   var SETTINGS_KEY = 'infinity.settings';
 
   var PRODUCTS = [
     {
       slug: 'infinitycloud', short: 'inc', name: 'Infinity Cloud', repo: 'Infinity-Cloud',
-      tagline: 'A cloud drive whose storage is GitHub releases. A file tree kept in a manifest, split across release assets, with a recycle bin.'
+      tagline: 'A cloud drive whose storage is GitHub releases. A file tree kept in a manifest, split across release assets, with a recycle bin.',
+      taglineZh: '把 GitHub release 当存储的云盘：文件树写在清单里，按分片存进 release 资产，并带回收站。'
     },
     {
       slug: 'infinityfilemanager', short: 'ifm', name: 'Infinity File Manager', repo: 'Infinity-File-Manager',
-      tagline: 'A local file manager. Copy, move, rename and delete, with a recycle bin instead of a delete that cannot be undone.'
+      tagline: 'A local file manager. Copy, move, rename and delete, with a recycle bin instead of a delete that cannot be undone.',
+      taglineZh: '本地文件管理器：复制、移动、重命名、删除，用回收站替代无法撤销的删除。'
     },
     {
       slug: 'infinitypackagemanager', short: 'ipm', name: 'InfinityPackageManager', repo: 'InfinityPackageManager',
-      tagline: 'A package catalogue and installer. Every package is a release asset in one repository; nothing is installed without a matching SHA-256.'
+      tagline: 'A package catalogue and installer. Every package is a release asset in one repository; nothing is installed without a matching SHA-256.',
+      taglineZh: '软件包目录与安装器：每个包都是同一仓库里的 release 资产，SHA-256 不匹配就不会安装。'
     },
     {
       slug: 'infinitytoolbox', short: 'int', name: 'Infinity Toolbox', repo: 'Infinity-Toolbox',
-      tagline: 'A toolbox system. Steam++ , FastGithub and a download manager rewritten in C++ and compiled in, with third-party tools added as plugins.'
+      tagline: 'A toolbox system. Steam++ , FastGithub and a download manager rewritten in C++ and compiled in, with third-party tools added as plugins.',
+      taglineZh: '工具箱：Steam++、FastGithub 与下载管理器的 C++ 重写版，第三方工具以插件形式接入。'
     },
     {
       slug: 'infinityinstallmanager', short: 'iim', name: 'Infinity Installer Manager', repo: 'Infinity-Installer-Manager',
-      tagline: 'The single entry point. Installs the products, the plugins they drive and the resource packs they load, from one catalogue.'
+      tagline: 'The single entry point. Installs the products, the plugins they drive and the resource packs they load, from one catalogue.',
+      taglineZh: '统一入口：从同一份目录安装产品、它们驱动的插件以及加载的资源包。'
     },
     {
       slug: 'infinitygames', short: 'ing', name: 'Infinity Games', repo: 'Infinity-Games',
-      tagline: 'A games library: online games played inside the window and local games run from disk, in one catalogue.'
+      tagline: 'A games library: online games played inside the window and local games run from disk, in one catalogue.',
+      taglineZh: '游戏库：窗口里玩的在线游戏与从磁盘启动的本地游戏，收在同一个目录中。'
     }
   ];
 
@@ -97,7 +112,7 @@
       wantRead: 'If you want to read first',
       wantReadText: 'The <a href="./docs/">documentation</a> is the project’s own files, rendered as they are — what is written there is what the code says.',
       downloadTitle: 'Download',
-      downloadLede: 'Each product installs on its own. If you want all of them, install <a href="./infinityinstallmanager/">Infinity Installer Manager</a> instead — it reads the same catalogue and installs the products, plugins and resource packs from one place.',
+      downloadLede: 'Six applications. Pick one — the card opens its latest release on GitHub.',
       platform: 'Platform', requirements: 'Requirements',
       requirementsText: 'Windows 10 or later. That is the whole list. The executables import only DLLs that ship with Windows — <code>kernel32</code>, <code>user32</code>, <code>gdi32</code>, <code>winhttp</code> and the UCRT forwarders — so there is no runtime to install, no framework to download and nothing to keep updated beside the program itself.',
       requirementsNote: 'You will need a GitHub account and a personal access token: the suite stores its data in GitHub releases. See <a href="../docs/">the documentation</a> for how to create one.',
@@ -146,7 +161,7 @@
       wantRead: '如果你想先读一读',
       wantReadText: '<a href="./docs/">文档</a>是项目自己的文件，原样渲染 —— 写在那里的就是代码里说的。',
       downloadTitle: '下载',
-      downloadLede: '每个产品都能单独安装。如果你全都想要，改为安装 <a href="./infinityinstallmanager/">Infinity Installer Manager</a> —— 它读同一份目录，从一个地方安装产品、插件和资源包。',
+      downloadLede: '六款应用。选一个 —— 卡片会打开它在 GitHub 上的最新发布。',
       platform: '平台', requirements: '系统要求',
       requirementsText: 'Windows 10 或更高版本。这就是全部要求。这些可执行文件只导入 Windows 自带的 DLL —— <code>kernel32</code>、<code>user32</code>、<code>gdi32</code>、<code>winhttp</code> 以及 UCRT 转发器 —— 所以没有运行时要安装，没有框架要下载，除了程序本身也没有别的东西需要保持更新。',
       requirementsNote: '你需要一个 GitHub 账号和个人访问令牌：这套软件把数据存在 GitHub release 里。如何创建，见<a href="../docs/">文档</a>。',
@@ -294,7 +309,9 @@
     preRelease: 'pre-release',
     source: 'source',
     kind: 'Kind',
-    digest: 'Digest'
+    digest: 'Digest',
+    winX64: 'Windows x64',
+    selfContained: 'self-contained'
   });
 
   Object.assign(T.zh, {
@@ -309,7 +326,9 @@
     preRelease: '预发布',
     source: '源码',
     kind: '类型',
-    digest: '摘要'
+    digest: '摘要',
+    winX64: 'Windows x64',
+    selfContained: '自包含，无运行时'
   });
 
   // The language comes from <html lang>, so a page does not have to know
@@ -532,12 +551,15 @@
     var path = location.pathname;
     var suffix = location.search || '';
     if (inChinese()) return path.replace('/cn/', '/') + suffix;
-    // Insert /cn/ right after the site base.
-    if (path.indexOf(BASE) === 0) {
-      var rest = path.slice(BASE.length);
-      return BASE + '/cn' + (rest === '' || rest === '/' ? '/' : rest) + suffix;
+    // Insert /cn/ right after the site base: /infinity/download/ becomes
+    // /infinity/cn/download/, and so on for every route.
+    if (path.indexOf(BASE_PATH) === 0) {
+      var rest = path.slice(BASE_PATH.length);
+      return BASE_PATH + '/cn' + (rest === '' || rest === '/' ? '/' : rest) + suffix;
     }
-    return path + suffix;
+    // The Pages root page is outside the suite's directory and has no Chinese
+    // copy of its own; its switch goes to the Chinese suite.
+    return BASE_PATH + '/cn/' + suffix;
   }
 
   function labelForOtherLanguage() { return lang() === 'zh' ? 'English' : '中文'; }
@@ -822,9 +844,52 @@
     }
   }
 
+  // ------------------------------------------------------------ product cards
+
+  /*
+   * One product, one card, and the whole card is the link. It points at the
+   * product's own repository rather than at a file kept here, because the
+   * release that is current today is not the one that will be current
+   * tomorrow, and a link baked into this page would be wrong the first time
+   * that changes.
+   */
+  function productHref(p) {
+    return 'https://github.com/zssx-2026/' + p.repo + '/releases/latest';
+  }
+
+  function tagline(p) {
+    return (lang() === 'zh' && p.taglineZh) ? p.taglineZh : p.tagline;
+  }
+
+  function productCard(p) {
+    var card = el('a', { class: 'product pcard', href: productHref(p), title: p.name });
+    card.appendChild(el('img', {
+      class: 'icon', src: BASE + '/assets/icons/' + p.short + '.svg',
+      alt: '', width: '48', height: '48', loading: 'lazy'
+    }));
+    card.appendChild(el('div', { class: 'tag', text: p.short }));
+    card.appendChild(el('h3', { text: p.name }));
+    card.appendChild(el('p', { class: 'tagline', text: tagline(p) }));
+    card.appendChild(el('div', { class: 'row platforms' }, [
+      el('span', { class: 'pill', text: t('winX64') }),
+      el('span', { class: 'pill', text: t('selfContained') })
+    ]));
+    return card;
+  }
+
+  function cards(host) {
+    clear(host);
+    PRODUCTS.forEach(function (p) { host.appendChild(productCard(p)); });
+  }
+
   window.INFINITY = {
     BASE: BASE,
+    BASE_PATH: BASE_PATH,
     PRODUCTS: PRODUCTS,
+    productHref: productHref,
+    productCard: productCard,
+    cards: cards,
+    tagline: tagline,
     applyTranslations: applyTranslations,
     page: page,
     el: el,

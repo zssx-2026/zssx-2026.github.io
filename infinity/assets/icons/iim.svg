@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Infinity Installer Manager - the single entry point that installs everything else.
+
+  Same tile, same Infinity loop, same construction as the rest of the set.
+  Only the figure in the middle changes.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#3A2308"/>
+  <rect x="8" y="8" width="240" height="120" rx="54" fill="#6B3F0A"/>
+
+  <!-- a program arriving: a tray, and an arrow dropping into it -->
+  <polygon points="70,140 186,140 186,154 70,154" fill="#F2CC60"/>
+  <polygon points="70,154 186,154 186,168 70,168" fill="#BB8009"/>
+  <rect x="116" y="56" width="24" height="48" fill="#E6EDF3"/>
+  <polygon points="94,100 162,100 128,138" fill="#E6EDF3"/>
+
+  <circle cx="104" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <circle cx="152" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <rect x="104" y="178" width="48" height="24" fill="#E6EDF3"/>
+</svg>

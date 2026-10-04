@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Infinity File Manager - the family's file manager.
+
+  Same tile, same Infinity loop, same construction as the cloud icon; the
+  figure in the middle is a folder, drawn as a tab plus a body so it reads at
+  16 pixels without any detail that would turn to mud.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#0F2A1E"/>
+  <rect x="8" y="8" width="240" height="120" rx="54" fill="#1F4D3A"/>
+
+  <!-- the folder: a tab, then the body, then a lighter lip -->
+  <rect x="64" y="72" width="52" height="22" rx="10" fill="#3FB950"/>
+  <rect x="60" y="86" width="136" height="76" rx="16" fill="#3FB950"/>
+  <rect x="60" y="104" width="136" height="58" rx="16" fill="#56D364"/>
+  <rect x="60" y="104" width="136" height="20" fill="#56D364"/>
+
+  <!-- the Infinity loop: two rings sharing one band -->
+  <circle cx="104" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <circle cx="152" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <rect x="104" y="178" width="48" height="24" fill="#E6EDF3"/>
+</svg>

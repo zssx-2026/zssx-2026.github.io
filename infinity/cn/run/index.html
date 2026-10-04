@@ -1,34 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Run — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
-<script src="../assets/guard.js"></script>
+<title>运行程序 — Infinity.Inc</title>
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/guard.js"></script>
 </head>
 <body>
 <main id="app" style="max-width:680px">
-  <h1>Run a program</h1>
-  <p class="lede">A desktop program opened this page with a request. A web page cannot start a
-  program on your machine, so this page does the two things it actually can: it shows you exactly
-  what is being asked for, and it hands the request to a copy of the suite you already have.</p>
+  <h1 data-t="runTitle"></h1>
+  <p class="lede" data-t="runLede"></p>
 
   <div class="card">
-    <h3>The request</h3>
+    <h3>请求内容</h3>
     <div id="request"></div>
   </div>
 
   <div class="card">
-    <h3>Run it</h3>
+    <h3>运行它</h3>
     <div id="actions"></div>
   </div>
 </main>
 
-<script src="../assets/site.js"></script>
+<script src="../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/run/');
   I.footer();
 
@@ -48,8 +47,6 @@
     return line;
   }
 
-  // The id names the product. Anything the id does not match is shown as an
-  // unknown request rather than silently treated as the first product.
   var product = I.productBySlug(String(runId).toLowerCase());
   if (!product) {
     for (var i = 0; i < I.PRODUCTS.length; i++) {
@@ -58,62 +55,55 @@
   }
 
   I.clear(reqHost);
-  reqHost.appendChild(row('Run id', runId || '(none)', true));
-  reqHost.appendChild(row('Product', product ? product.name : 'not recognised'));
-  reqHost.appendChild(row('Payload', decoded ? decoded.slice(0, 500) : '(none)', true));
+  reqHost.appendChild(row('运行 ID', runId || '（无）', true));
+  reqHost.appendChild(row('产品', product ? product.name : '无法识别'));
+  reqHost.appendChild(row('载荷', decoded ? decoded.slice(0, 500) : '（无）', true));
   if (decoded.length > 500) {
     reqHost.appendChild(I.el('p', { class: 'small faint', text:
-      'Showing the first 500 characters of ' + decoded.length + '.' }));
+      '仅显示前 500 个字符，共 ' + decoded.length + ' 个。' }));
   }
 
   I.clear(actHost);
 
   if (!runId) {
-    actHost.appendChild(I.el('div', { class: 'note warn', text:
-      'This address carries no run id.' }));
-    actHost.appendChild(I.el('p', null, [I.link(I.page('/download/'), 'Downloads')]));
+    actHost.appendChild(I.el('div', { class: 'note warn', text: '该地址没有运行 ID。' }));
+    actHost.appendChild(I.el('p', null, [I.link(I.page('/download/'), I.t('downloadTitle'))]));
     return;
   }
 
-  // 1. Hand off to a local install. The suite registers a protocol handler,
-  //    so this is the path that actually starts something.
   var handoff = 'infinity://run/' + encodeURIComponent(runId) + '/?=' + encodeURIComponent(raw);
   actHost.appendChild(I.el('p', { class: 'muted' }, [
-    'If you have the suite installed, this button hands the request to it. Your browser will ' +
-    'ask once whether to allow the link.'
+    '如果已安装套件，这个按钮会把请求交给它。浏览器只会询问一次是否允许打开该链接。'
   ]));
-  actHost.appendChild(I.el('a', { class: 'btn', href: handoff }, ['Open in the installed suite']));
+  actHost.appendChild(I.el('a', { class: 'btn', href: handoff }, ['交给已安装的套件打开']));
 
-  // 2. Otherwise, get the program.
   var alt = I.el('div', { style: 'margin-top:18px' });
   if (product) {
     alt.appendChild(I.el('p', { class: 'muted' }, [
-      'No copy installed yet? Download ' + product.name + ' and open this page again.' ]));
+      '还没装？下载 ' + product.name + '，然后重新打开本页。' ]));
     alt.appendChild(I.el('a', {
       class: 'btn ghost', href: I.page('/download/' + product.slug + '/')
-    }, ['Download ' + product.name]));
+    }, ['下载 ' + product.name]));
   } else {
     alt.appendChild(I.el('div', { class: 'note warn', text:
-      'The run id does not match a product this site knows about, so there is nothing to ' +
-      'download for it. The link may be from a newer version of the suite than this page.' }));
-    alt.appendChild(I.el('a', { class: 'btn ghost', href: I.page('/download/') }, ['All downloads']));
+      '运行 ID 与本站已知的产品都不匹配，因此没有可下载的东西。该链接可能来自比本页更新的套件版本。' }));
+    alt.appendChild(I.el('a', { class: 'btn ghost', href: I.page('/download/') }, ['全部下载']));
   }
   actHost.appendChild(alt);
 
-  // 3. Record the request so a desktop program can pick it up after signing in.
   if (I.token()) {
     try {
       var pending = JSON.parse(localStorage.getItem('infinity.pending') || '[]');
       pending.push({ id: runId, payload: raw, at: Date.now() });
       localStorage.setItem('infinity.pending', JSON.stringify(pending.slice(-20)));
       actHost.appendChild(I.el('p', { class: 'small faint', style: 'margin-top:16px', text:
-        'Saved to this browser as a pending request for the installed suite to collect.' }));
-    } catch (e) { /* a full or disabled store is not worth failing the page over */ }
+        '已在本浏览器保存为待处理请求，供已安装的套件读取。' }));
+    } catch (e) { /* 存储不可用不值得让整页失败 */ }
   } else {
     actHost.appendChild(I.el('p', { class: 'small muted', style: 'margin-top:16px' }, [
       I.link(I.page('/login/') + '?next=' + encodeURIComponent(location.pathname + location.search),
-        'Sign in'),
-      ' to save this request and see the account it belongs to.'
+        I.t('signIn')),
+      ' 后可保存该请求并查看它所属的账户。'
     ]));
   }
 })();

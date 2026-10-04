@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  InfinityPackageManager - the family's package manager.
+
+  Same tile, same Infinity loop, same construction as the other two. The
+  figure is a parcel: a rhombus lid over two shaded sides, which is the
+  simplest shape that still says "box" when it is sixteen pixels wide.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#241338"/>
+  <rect x="8" y="8" width="240" height="120" rx="54" fill="#4A2A6B"/>
+
+  <!-- the parcel: lid, left face, right face -->
+  <polygon points="128,62 198,96 128,130 58,96" fill="#A371F7"/>
+  <polygon points="58,96 128,130 128,168 58,134" fill="#8250DF"/>
+  <polygon points="198,96 128,130 128,168 198,134" fill="#6E40C9"/>
+
+  <!-- the Infinity loop: two rings sharing one band -->
+  <circle cx="104" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <circle cx="152" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <rect x="104" y="178" width="48" height="24" fill="#E6EDF3"/>
+</svg>

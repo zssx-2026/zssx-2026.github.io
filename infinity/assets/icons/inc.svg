@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Infinity Cloud - the family's cloud drive.
+
+  The three icons share one construction so they read as a set: a rounded
+  tile, a family mark drawn in the accent colour, and the Infinity loop along
+  the bottom. Only the middle figure changes - a cloud here, a folder for the
+  file manager, a parcel for the package manager.
+
+  Everything is rectangles, circles and straight-edged polygons. That is a
+  deliberate constraint: the rasteriser that turns these into .ico files is
+  part of the project, and it handles exactly this vocabulary. Nothing here
+  needs a path arc or a filter to look right.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#12233F"/>
+  <rect x="8" y="8" width="240" height="120" rx="54" fill="#1B3A6B"/>
+
+  <!-- the cloud -->
+  <circle cx="92" cy="104" r="34" fill="#58A6FF"/>
+  <circle cx="140" cy="88" r="44" fill="#58A6FF"/>
+  <circle cx="184" cy="112" r="30" fill="#58A6FF"/>
+  <rect x="70" y="104" width="132" height="40" rx="20" fill="#58A6FF"/>
+  <rect x="70" y="112" width="132" height="32" fill="#58A6FF"/>
+
+  <!-- the Infinity loop: two rings sharing one band -->
+  <circle cx="104" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <circle cx="152" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <rect x="104" y="178" width="48" height="24" fill="#E6EDF3"/>
+</svg>

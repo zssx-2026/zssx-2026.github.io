@@ -4,42 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Download — Infinity.Inc</title>
-<meta name="description" content="Download Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager.">
+<meta name="description" content="Download Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox, Infinity Installer Manager and Infinity Games for Windows.">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/guard.js"></script>
 </head>
 <body>
 <main id="app">
   <h1>Download</h1>
-  <p class="lede">Each product installs on its own. If you want all of them, install
-  <a href="./infinityinstallmanager/">Infinity Installer Manager</a> instead — it reads the same
-  catalogue and installs the products, plugins and resource packs from one place.</p>
+  <p class="lede">Six applications. Pick one — the card opens its latest release on GitHub.</p>
 
   <section class="stack">
-    <div class="spread">
-      <h2>Products</h2>
-      <div class="row">
-        <label for="platform" class="small muted" style="margin:0">Platform</label>
-        <select id="platform" style="width:auto">
-          <option value="win64">Windows x64</option>
-          <option value="winx86">Windows x86</option>
-          <option value="win-arm64">Windows on ARM</option>
-        </select>
-      </div>
-    </div>
-    <div id="list"></div>
-  </section>
-
-  <section class="stack">
-    <h2>Requirements</h2>
-    <div class="card">
-      <p>Windows 10 or later. That is the whole list. The executables import only DLLs that
-      ship with Windows — <code>kernel32</code>, <code>user32</code>, <code>gdi32</code>,
-      <code>winhttp</code> and the UCRT forwarders — so there is no runtime to install, no
-      framework to download and nothing to keep updated beside the program itself.</p>
-      <p class="muted small">You will need a GitHub account and a personal access token: the
-      suite stores its data in GitHub releases. See
-      <a href="../docs/">the documentation</a> for how to create one.</p>
-    </div>
+    <div class="grid" id="cards"></div>
   </section>
 </main>
 
@@ -49,70 +24,7 @@
   var I = window.INFINITY;
   I.nav('/download/');
   I.footer();
-
-  var host = document.getElementById('list');
-  var select = document.getElementById('platform');
-  var settings = I.settings();
-  select.value = settings.downloadPlatform;
-  select.addEventListener('change', function () {
-    I.saveSettings({ downloadPlatform: select.value });
-    load(select.value);
-  });
-
-  function load(platform) {
-    I.loading(host, 'Reading releases…');
-    Promise.all(I.PRODUCTS.map(function (p) {
-      return I.releases(p.repo).then(function (list) { return { p: p, list: list || [] }; })
-        .catch(function (e) { return { p: p, list: [], error: e.message }; });
-    })).then(function (results) {
-      I.clear(host);
-      var table = I.el('table');
-      table.appendChild(I.el('thead', null, [I.el('tr', null, [
-        I.el('th', { text: 'Product' }),
-        I.el('th', { text: 'Version' }),
-        I.el('th', { text: 'Published' }),
-        I.el('th', { class: 'num', text: 'Size' }),
-        I.el('th')
-      ])]));
-      var body = I.el('tbody');
-
-      results.forEach(function (r) {
-        var latest = r.list.filter(function (x) { return !x.draft; })[0];
-        var row = I.el('tr');
-        row.appendChild(I.el('td', null, [
-          I.link(I.page('/download/' + r.p.slug + '/'), r.p.name),
-          I.el('div', { class: 'small faint', text: r.p.short })
-        ]));
-
-        if (!latest) {
-          row.appendChild(I.el('td', { class: 'faint', text: '—' }));
-          row.appendChild(I.el('td', { class: 'faint', text: r.error ? 'unavailable' : 'no releases' }));
-          row.appendChild(I.el('td', { class: 'num faint', text: '—' }));
-          row.appendChild(I.el('td', { class: 'small faint', text: 'nothing to download yet' }));
-        } else {
-          var assets = I.assetsFor(latest, platform);
-          row.appendChild(I.el('td', { class: 'mono', text: latest.tag_name || '' }));
-          row.appendChild(I.el('td', { class: 'muted', text: I.fmtDate(latest.published_at) }));
-          row.appendChild(I.el('td', { class: 'num', text: assets.length ? I.fmtSize(assets[0].size) : '—' }));
-          var cell = I.el('td');
-          if (assets.length) {
-            cell.appendChild(I.el('a', { class: 'btn small', href: assets[0].browser_download_url, text: 'Download' }));
-          } else {
-            cell.appendChild(I.el('span', { class: 'small faint', text: 'no build for ' + platform }));
-          }
-          row.appendChild(cell);
-        }
-        body.appendChild(row);
-      });
-
-      table.appendChild(body);
-      host.appendChild(table);
-    }).catch(function (e) {
-      I.failure(host, 'Could not read the releases: ' + e.message);
-    });
-  }
-
-  load(settings.downloadPlatform);
+  I.cards(document.getElementById('cards'));
 })();
 </script>
 </body>

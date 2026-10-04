@@ -1,74 +1,73 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Settings — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
-<script src="../assets/guard.js"></script>
+<title>设置 — Infinity.Inc</title>
+<meta name="description" content="这些是这个网站在这个浏览器里的偏好。桌面程序各自保存自己的设置，两者不共享。">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/guard.js"></script>
 </head>
 <body>
 <main id="app" style="max-width:680px">
-  <h1>Settings</h1>
-  <p class="lede">These are the preferences of this website in this browser. The desktop
-  programs keep their own, and they are not shared — there is no account for them to be stored
-  against.</p>
+  <h1 data-t="settings"></h1>
+  <p class="lede" data-t="settingsLede"></p>
 
   <div class="card">
-    <h3>Downloads</h3>
+    <h3 data-t="downloadsGroup"></h3>
     <div class="field">
-      <label for="downloadPlatform">Platform to offer first</label>
+      <label for="downloadPlatform" data-t="platformFirst"></label>
       <select id="downloadPlatform">
-        <option value="win64">Windows x64</option>
-        <option value="winx86">Windows x86</option>
-        <option value="win-arm64">Windows on ARM</option>
+        <option value="win64" data-t="platformWin64"></option>
+        <option value="winx86" data-t="platformX86"></option>
+        <option value="win-arm64" data-t="platformArm"></option>
       </select>
     </div>
     <div class="field">
-      <label for="showPrerelease">Show pre-releases</label>
+      <label for="showPrerelease" data-t="showPrereleaseLabel"></label>
       <select id="showPrerelease">
-        <option value="true">Yes</option>
-        <option value="false">No, only stable releases</option>
+        <option value="true" data-t="yesWord"></option>
+        <option value="false" data-t="noStableOnly"></option>
       </select>
     </div>
   </div>
 
   <div class="card">
-    <h3>Appearance</h3>
+    <h3 data-t="appearanceGroup"></h3>
     <div class="field">
-      <label for="theme">Theme</label>
+      <label for="theme" data-t="themeLabel"></label>
       <select id="theme">
-        <option value="dark">Dark</option>
-        <option value="light">Light (not implemented yet)</option>
+        <option value="dark" data-t="darkWord"></option>
+        <option value="light" data-t="lightWord"></option>
       </select>
+      <p class="small faint" style="margin:6px 0 0" data-t="themeNote"></p>
     </div>
   </div>
 
   <div class="card">
-    <h3>Credential</h3>
+    <h3 data-t="credentialGroup"></h3>
     <div id="cred"></div>
   </div>
 
   <div class="card">
-    <h3>Saved requests</h3>
-    <p class="muted small">Run requests this browser has been handed, newest last. A desktop
-    program collects them when it starts.</p>
+    <h3 data-t="savedRequests"></h3>
+    <p class="muted small" data-t="savedRequestsText"></p>
     <div id="pending"></div>
   </div>
 
   <div class="card">
-    <h3>Reset</h3>
-    <p class="muted small">Clears every preference and every saved request in this browser. It
-    does not touch your GitHub account or any repository.</p>
-    <button class="btn ghost" id="reset">Clear this browser's data</button>
+    <h3 data-t="resetGroup"></h3>
+    <p class="muted small" data-t="resetText"></p>
+    <button class="btn ghost" id="reset" data-t="resetButton"></button>
     <div id="resetResult" style="margin-top:12px"></div>
   </div>
 </main>
 
-<script src="../assets/site.js"></script>
+<script src="../../assets/site.js"></script>
 <script>
 (function () {
   var I = window.INFINITY;
+  I.applyTranslations();
   I.nav('/settings/');
   I.footer();
 
@@ -76,6 +75,7 @@
 
   function bind(id, key, transform) {
     var node = document.getElementById(id);
+    if (!node) return;
     node.value = String(s[key]);
     node.addEventListener('change', function () {
       var value = transform ? transform(node.value) : node.value;
@@ -96,23 +96,26 @@
   function renderCred() {
     I.clear(cred);
     if (!I.token()) {
-      cred.appendChild(I.el('p', { class: 'muted', text: 'No token in this browser.' }));
-      cred.appendChild(I.el('a', { class: 'btn ghost', href: I.page('/login/') }, ['Sign in']));
+      cred.appendChild(I.el('p', { class: 'muted', text: I.t('noTokenHere') }));
+      cred.appendChild(I.link(I.page('/login/'), I.t('signIn'), 'btn ghost'));
       return;
     }
-    cred.appendChild(I.el('p', { class: 'muted', text:
-      'A token is stored in this browser and sent only to api.github.com.' }));
-    var masked = I.el('p', { class: 'mono small faint', text: '••••••••  (' + I.token().length + ' characters)' });
-    cred.appendChild(masked);
+    cred.appendChild(I.el('p', { class: 'muted', text: I.t('tokenStoredNote') }));
+    cred.appendChild(I.el('p', {
+      class: 'mono small faint',
+      text: '••••••••（' + I.token().length + ' ' + I.t('charactersWord') + '）'
+    }));
     var row = I.el('div', { class: 'row' });
-    var check = I.el('button', { class: 'btn ghost small' }, ['Check it']);
+    var check = I.el('button', { class: 'btn ghost small' }, [I.t('checkIt')]);
     var result = I.el('span', { class: 'small muted' });
     check.addEventListener('click', function () {
-      result.textContent = 'checking…';
+      result.textContent = I.t('checkingWord');
       I.verify().then(function (u) {
-        result.textContent = u ? 'valid, signed in as ' + u.login : 'no account returned';
+        result.textContent = u
+          ? I.t('validAs') + ' ' + u.login
+          : I.t('noAccountReturned');
       }).catch(function (e) {
-        result.textContent = 'rejected: ' + e.message;
+        result.textContent = I.t('rejectedWord') + e.message;
       });
     });
     row.appendChild(check);
@@ -128,20 +131,24 @@
     var list = [];
     try { list = JSON.parse(localStorage.getItem('infinity.pending') || '[]'); } catch (e) { list = []; }
     if (!list.length) {
-      pendingHost.appendChild(I.el('div', { class: 'empty', text: 'Nothing saved.' }));
+      pendingHost.appendChild(I.el('div', { class: 'empty', text: I.t('nothingSaved') }));
       return;
     }
     var table = I.el('table');
     table.appendChild(I.el('thead', null, [I.el('tr', null, [
-      I.el('th', { text: 'Run id' }), I.el('th', { text: 'Saved' }), I.el('th')
+      I.el('th', { text: I.t('runIdLabel') }),
+      I.el('th', { text: I.t('savedWord') }),
+      I.el('th')
     ])]));
     var tb = I.el('tbody');
     list.forEach(function (item, index) {
       var row = I.el('tr');
       row.appendChild(I.el('td', { class: 'mono small', text: item.id }));
-      row.appendChild(I.el('td', { class: 'muted small', text: I.fmtDate(new Date(item.at).toISOString()) }));
+      row.appendChild(I.el('td', {
+        class: 'muted small', text: I.fmtDate(new Date(item.at).toISOString())
+      }));
       var cell = I.el('td');
-      var del = I.el('button', { class: 'btn ghost small', text: 'Forget' });
+      var del = I.el('button', { class: 'btn ghost small', text: I.t('forgetWord') });
       del.addEventListener('click', function () {
         list.splice(index, 1);
         localStorage.setItem('infinity.pending', JSON.stringify(list));
@@ -164,8 +171,7 @@
       localStorage.removeItem('infinity.pending');
     } catch (e) { /* nothing to do if the store is unavailable */ }
     I.clear(resetResult);
-    resetResult.appendChild(I.el('div', { class: 'note', text:
-      'Cleared. The token was left alone — sign out from the account page if you want it gone.' }));
+    resetResult.appendChild(I.el('div', { class: 'note', text: I.t('resetDone') }));
     s = I.settings();
     renderPending();
   });

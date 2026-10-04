@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Infinity.Inc — the Infinity suite</title>
-<meta name="description" content="Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox and Infinity Installer Manager: Windows applications that need nothing but Windows.">
+<meta name="description" content="Infinity Cloud, Infinity File Manager, InfinityPackageManager, Infinity Toolbox, Infinity Installer Manager and Infinity Games: Windows applications that need nothing but Windows.">
 <link rel="stylesheet" href="./assets/site.css">
+<script src="./assets/guard.js"></script>
 </head>
 <body>
 <main id="app">
@@ -47,7 +48,7 @@
   var host = document.getElementById('releases');
   I.loading(host, 'Reading releases…');
 
-  var wanted = I.PRODUCTS.slice(0, 5);
+  var wanted = I.PRODUCTS;
   Promise.all(wanted.map(function (p) {
     return I.releases(p.repo).then(function (list) { return { product: p, list: list || [] }; })
       .catch(function (e) { return { product: p, list: [], error: e.message }; });

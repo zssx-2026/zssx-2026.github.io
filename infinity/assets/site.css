@@ -127,6 +127,13 @@ footer.site .inner {
 .product h3 { margin: 6px 0 6px; }
 .product p { color: var(--ink-dim); font-size: 14px; margin: 0; }
 
+/* A product card: icon, name, one line, platform tags. The card itself is the
+ * link to that product's own release page, so there is no button inside it. */
+.pcard { display: flex; flex-direction: column; gap: 8px; }
+.pcard .icon { width: 48px; height: 48px; display: block; }
+.pcard .tagline { margin: 0; }
+.pcard .platforms { margin-top: auto; padding-top: 10px; }
+
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--accent); color: #fff; border: 0;

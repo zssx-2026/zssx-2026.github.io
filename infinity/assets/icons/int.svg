@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Infinity Toolbox - a chest of tools, each one rewritten and compiled in.
+
+  Same tile, same Infinity loop, same construction as the rest of the set.
+  Only the figure in the middle changes.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="#0A2540"/>
+  <rect x="8" y="8" width="240" height="120" rx="54" fill="#14406B"/>
+
+  <!-- a chest: lid, body, handle, latch -->
+  <rect x="60" y="94" width="136" height="20" rx="6" fill="#79C0FF"/>
+  <rect x="64" y="114" width="128" height="52" rx="6" fill="#1F6FEB"/>
+  <rect x="108" y="74" width="40" height="16" rx="6" fill="#79C0FF"/>
+  <rect x="120" y="104" width="16" height="20" rx="4" fill="#E6EDF3"/>
+
+  <circle cx="104" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <circle cx="152" cy="190" r="26" fill="none" stroke="#E6EDF3" stroke-width="13"/>
+  <rect x="104" y="178" width="48" height="24" fill="#E6EDF3"/>
+</svg>
