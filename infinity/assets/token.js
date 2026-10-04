@@ -10,8 +10,13 @@
  * writes down the one thing a product API needs from it: an Authorization
  * header carrying the secret as a bearer token.
  *
- * Secrets are masked until asked for, never put into a URL, and only written
- * to localStorage. Regenerating replaces the secret in the vault, so anything
+ * A key is listed for ever in the browser that made it and is visible there
+ * without ceremony: a key its owner cannot read again is a key its owner
+ * cannot use. It is only ever written to localStorage, never put into a URL,
+ * and never sent anywhere but the product the reader points it at.
+ *
+ * Tokens belong to Infinity.Inc's own products; nothing third-party is
+ * addressed with one. Regenerating replaces the secret in the vault, so anything
  * that reads the vault stops accepting the old one - anything the old secret
  * was already pasted into keeps working, which is true of every key that has
  * left its owner's hands.
@@ -33,15 +38,15 @@
     label: '备注',
     labelPlaceholder: '例如：我的笔记本',
     labelRequired: '请先填一个备注，以后才认得出它。',
-    scopes: '权限范围',
-    scopeRead: '读取',
-    scopeWrite: '写入',
-    scopeDelete: '删除',
+    scopes: '权限范围（仅限 INC）',
+    scopeRead: 'INC 读取',
+    scopeWrite: 'INC 写入',
+    scopeDelete: 'INC 删除',
     create: '创建',
     created: '已创建：',
     createdHint: '密钥默认打码，点“显示”再复制。',
-    vaultTitle: '本浏览器中的密钥',
-    vaultEmpty: '还没有密钥。在上面创建一个，就能复制进产品里用了。',
+    vaultTitle: '本浏览器中我自己创建的密钥',
+    vaultEmpty: '还没有密钥。在上面创建一个，就能复制进产品里用了。这里只显示你在这个浏览器里创建过的密钥——本站没有服务器，看不到别人的。',
     secret: '密钥',
     show: '显示',
     hide: '隐藏',
@@ -59,7 +64,7 @@
     never: '从未（本站无后端，无法统计真实调用）',
     idLabel: 'ID',
     integrationTitle: '如何接入',
-    integrationLede: '把密钥放进 Authorization 头，以 Bearer 方式发送。下面示例里的 inc_… 换成你自己的密钥；主机与端口换成产品实际监听的地址。',
+    integrationLede: '令牌只用于 Infinity.Inc 自己的产品（INC 等），第三方包不使用令牌。把密钥放进 Authorization 头，以 Bearer 方式发送；下面示例里的 inc_… 换成你自己的密钥，端口换成产品实际监听的端口（INC 的 UI/API 端口是 7621）。',
     curlExample: 'curl 示例',
     jsExample: 'JavaScript 示例',
     copyExample: '复制示例',
@@ -79,15 +84,15 @@
     label: 'Label',
     labelPlaceholder: 'for example: my laptop',
     labelRequired: 'Give it a label first, so it can be recognised later.',
-    scopes: 'Scopes',
-    scopeRead: 'read',
-    scopeWrite: 'write',
-    scopeDelete: 'delete',
+    scopes: 'Scopes (INC only)',
+    scopeRead: 'INC read',
+    scopeWrite: 'INC write',
+    scopeDelete: 'INC delete',
     create: 'Create',
     created: 'Created: ',
     createdHint: 'The secret is masked by default; press Show, then Copy.',
-    vaultTitle: 'Keys in this browser',
-    vaultEmpty: 'No keys yet. Create one above and it is ready to paste into a product.',
+    vaultTitle: 'Keys I created in this browser',
+    vaultEmpty: 'No keys yet. Create one above and it is ready to paste into a product. Only the keys you created in this browser are listed: there is no server here, so nobody else\u2019s can be seen.',
     secret: 'Secret',
     show: 'Show',
     hide: 'Hide',
@@ -105,7 +110,7 @@
     never: 'never (no server here, so calls cannot be counted)',
     idLabel: 'ID',
     integrationTitle: 'How to use it',
-    integrationLede: 'Send the secret in an Authorization header as a bearer token. Replace inc_\u2026 below with your own key, and the host and port with the address the product actually listens on.',
+    integrationLede: 'A token is for Infinity.Inc\u2019s own products only (INC and the rest); third-party packages never use one. Send the secret in an Authorization header as a bearer token. Replace inc_\u2026 below with your own key, and the host and port with the address the product actually listens on.',
     curlExample: 'curl',
     jsExample: 'JavaScript',
     copyExample: 'Copy example',
@@ -206,9 +211,10 @@
     card.appendChild(head);
 
     var secretRow = el('div', { class: 'row', style: 'margin-top:10px' });
-    secretRow.appendChild(el('code', { class: 'token-secret', text: revealed[token.id] ? token.secret : maskOf() }));
-    var show = el('button', { class: 'btn ghost small', type: 'button', text: revealed[token.id] ? S.hide : S.show });
-    show.addEventListener('click', function () { revealed[token.id] = !revealed[token.id]; list(); });
+    secretRow.appendChild(el('code', { class: 'token-secret', text: revealed[token.id] === false ? maskOf() : token.secret }));
+    var shown = revealed[token.id] !== false;
+    var show = el('button', { class: 'btn ghost small', type: 'button', text: shown ? S.hide : S.show });
+    show.addEventListener('click', function () { revealed[token.id] = shown ? false : true; list(); });
     secretRow.appendChild(show);
     var copy = el('button', { class: 'btn ghost small', type: 'button', text: S.copy });
     copy.addEventListener('click', function () { copyText(token.secret); });
@@ -272,8 +278,8 @@
 
   function exampleTexts() {
     return {
-      curl: 'curl -H "Authorization: Bearer inc_<32 hex>" \\\n     http://127.0.0.1:8787/v1/ping',
-      js: 'const res = await fetch("http://127.0.0.1:8787/v1/ping", {\n  headers: { Authorization: "Bearer inc_<32 hex>" }\n});'
+      curl: 'curl -H "Authorization: Bearer inc_<32 hex>" \\\n     http://127.0.0.1:7621/v1/ping',
+      js: 'const res = await fetch("http://127.0.0.1:7621/v1/ping", {\n  headers: { Authorization: "Bearer inc_<32 hex>" }\n});'
     };
   }
 
@@ -318,6 +324,7 @@
       });
       if (!writeVault(rows)) { status(createStatus, S.saveFailed, true); return; }
       if (input) input.value = '';
+      revealed[rows[rows.length - 1].id] = true;
       list();
       status(createStatus, S.created + labelText + '\u3002 ' + S.createdHint, false);
     });
