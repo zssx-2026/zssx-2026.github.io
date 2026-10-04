@@ -40,6 +40,20 @@
     BASE_PATH = new URL(BASE, location.href).pathname.replace(/\/+$/, '') || '/infinity';
   } catch (e) { /* keep the fallback */ }
 
+  /*
+   * The release the download cards point at, in one place.
+   *
+   * The suite's C++ builds are published as pre-releases, and GitHub's
+   * /releases/latest skips those: on the older application repositories it
+   * resolves to the Node-era stable v1.0pre1, which is not what the cards
+   * should hand anybody. The tag is therefore named explicitly.
+   *
+   * Keep in step with cpp/release/v1.0pre4/release-assets.json ("tag") - the
+   * directory name carries the same version. Both language versions read it
+   * from here, so there is nothing else to update when it moves.
+   */
+  var RELEASE_TAG = 'v1.0.0-pre4';
+
   var TOKEN_KEY = 'infinity.token';
   var SETTINGS_KEY = 'infinity.settings';
 
@@ -854,7 +868,7 @@
    * that changes.
    */
   function productHref(p) {
-    return 'https://github.com/zssx-2026/' + p.repo + '/releases/latest';
+    return 'https://github.com/zssx-2026/' + p.repo + '/releases/tag/' + RELEASE_TAG;
   }
 
   function tagline(p) {
@@ -885,6 +899,7 @@
   window.INFINITY = {
     BASE: BASE,
     BASE_PATH: BASE_PATH,
+    RELEASE_TAG: RELEASE_TAG,
     PRODUCTS: PRODUCTS,
     productHref: productHref,
     productCard: productCard,
