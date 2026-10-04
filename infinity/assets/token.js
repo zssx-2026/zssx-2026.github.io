@@ -246,7 +246,7 @@
     del.addEventListener('click', function () {
       if (!armed) {
         armed = true;
-        del.textContent = (S.removeAsk || 'Delete?') + ' — ' + (document.documentElement.getAttribute('lang') || '').indexOf('zh') === 0 ? '再点一次' : 'click again';
+        del.textContent = zh ? '再点一次确认' : 'click again to confirm';
         del.classList.add('danger');
         disarm = setTimeout(function () { armed = false; del.textContent = S.remove; del.classList.remove('danger'); }, 6000);
         return;
