@@ -63,7 +63,9 @@
         I.clear(box);
         var products = (I.products || []).filter(function (p) { return data.repos[p.repo]; });
         if (!products.length) { box.appendChild(el('p', { class: 'dl-state', text: t('failed') })); return; }
-        products.forEach(function (p) { box.appendChild(productSection(p, data.repos[p.repo])); });
+        products.forEach(function (p) {
+          box.appendChild(productSection(p, data.repos[p.repo], (data.bundles && data.bundles[p.repo]) || []));
+        });
       })
       .catch(function () {
         I.clear(box);
@@ -71,7 +73,7 @@
       });
   }
 
-  function productSection(product, releases) {
+  function productSection(product, releases, bundles) {
     var sec = el('section', { class: 'arc-product' });
     var h = el('h2', { class: 'arc-title' });
     h.appendChild(document.createTextNode(product.name + '  '));
@@ -116,13 +118,22 @@
 
       order.forEach(function (key) {
         var group = byRelease[key];
-        var bundle = group.files.filter(function (f) { return f.parsed.ext === 'zst'; });
+        /* A .zst built for this release and platform wins over one that a
+         * release happens to carry; both are shown when both exist. */
+        var published = (bundles || []).filter(function (b) {
+          return String(b.tag) === String(key) && b.platform === platformCode;
+        });
+        var bundle = published.concat(group.files.filter(function (f) { return f.parsed.ext === 'zst'; }));
         var line = el('div', { class: 'arc-row' });
         line.appendChild(el('span', { class: 'dl-ver-tag', text: key }));
         line.appendChild(el('span', { class: 'dl-date', text: when(group.release.published_at) }));
         if (bundle.length) {
           bundle.forEach(function (f) {
-            line.appendChild(el('a', { class: 'arc-bundle', href: f.asset.browser_download_url, text: t('bundle') + ' \u00b7 ' + bytes(f.asset.size) }));
+            var url = f.asset ? f.asset.browser_download_url : f.url;
+            var size = f.asset ? f.asset.size : f.size;
+            var label = t('bundle') + ' \u00b7 ' + bytes(size);
+            if (f.sha256) label += ' \u00b7 sha256:' + String(f.sha256).slice(0, 10) + '\u2026';
+            line.appendChild(el('a', { class: 'arc-bundle', href: url, text: label }));
           });
         } else {
           var bits = group.files.filter(function (f) { return f.parsed.ext !== 'zst'; });
