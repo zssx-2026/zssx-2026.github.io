@@ -10,10 +10,8 @@
  * its files for that release, so an old version is still reachable without a
  * page that grows forever.
  *
- * Each file carries the SHA-256 the release published, so "the file is not
- * safe" can be answered with evidence rather than with a promise, and
- * assets/verify-download.ps1 checks that digest and clears the mark Windows
- * puts on a downloaded file.
+ * Nothing is asked of the reader here: no digest to compare and no script to
+ * run. A downloaded file unblocks itself when the application first starts.
  *
  * The list comes from assets/releases.json, written when the site is
  * published, so it needs no API quota, no proxy and no CORS; the live API is
@@ -48,25 +46,19 @@
   var TEXT = {
     en: {
       platform: 'Platform', loading: 'Loading versions…', showPre: 'Show pre-releases',
-      openRelease: 'Open the release page', failed: 'The version list is unavailable right now.',
       noReleases: 'No release is published yet.', noAssets: 'No files for this platform in this version.',
       pre: 'pre-release', latest: 'latest', files: 'files', file: 'file', recent: 'Released in the last year',
       archive: 'Older releases are in the archive', archiveLink: 'Open the archive',
       kindSetup: 'Installer (exe)', kindMsi: 'Windows msi', kindPort: 'Portable (zip)',
       kindSrcZip: 'Source code (zip)', kindSrcZst: 'Source code (zst)', kindOther: 'Other files',
-      safety: 'SHA-256 published', script: 'Verify script',
-      safeNote: 'If Windows says the file is unsafe, verify the digest and clear the mark with this script (it runs Unblock-File).'
     },
     zh: {
       platform: '平台', loading: '正在加载版本…', showPre: '显示预发布版本',
-      openRelease: '打开该版本的 Release 页', failed: '暂时无法获取版本列表。',
       noReleases: '还没有发布任何版本。', noAssets: '该版本在此平台下没有文件。',
       pre: '预发布', latest: '最新', files: '个文件', file: '个文件', recent: '一年内发布的版本',
       archive: '更早的版本在归档里', archiveLink: '打开归档',
       kindSetup: 'exe 安装包', kindMsi: 'Windows msi', kindPort: '便携版 zip',
       kindSrcZip: '源代码 zip', kindSrcZst: '源代码 zst', kindOther: '其它文件',
-      safety: '已公布 SHA-256', script: '校验脚本',
-      safeNote: '若 Windows 提示“文件不安全”，用校验脚本核对摘要并解除锁定（脚本会执行 Unblock-File）。'
     }
   };
 
@@ -218,7 +210,6 @@
     preWrap.appendChild(pre);
     preWrap.appendChild(el('span', { text: t('showPre') }));
     bar.appendChild(preWrap);
-    bar.appendChild(el('a', { class: 'dl-openrel', href: I.productHref(product), text: t('openRelease') }));
     box.appendChild(bar);
 
     var list = el('div', { class: 'dl-list' });
@@ -266,9 +257,7 @@
         Object.keys(byKind).forEach(function (kind) {
           if (ORDER.indexOf(kind) < 0) body.appendChild(kindBlock(kind, byKind[kind]));
         });
-        body.appendChild(safetyBlock());
       }
-      body.appendChild(el('a', { class: 'dl-openrel', href: r.html_url, text: t('openRelease') }));
       d.appendChild(body);
       host.appendChild(d);
     });
@@ -282,21 +271,11 @@
       var li = el('li', { class: 'dl-file' });
       li.appendChild(el('a', { class: 'dl-file-name', href: x.raw.browser_download_url, text: x.raw.name }));
       li.appendChild(el('span', { class: 'dl-file-size', text: bytes(x.raw.size) }));
-      var digest = x.raw.digest || '';
-      if (digest) li.appendChild(el('span', { class: 'dl-digest', title: digest, text: 'sha256:' + digest.replace(/^sha256:/i, '').slice(0, 12) + '\u2026' }));
       li.appendChild(el('span', { class: 'dl-file-date', text: when(x.raw.created_at) }));
       ul.appendChild(li);
     });
     sec.appendChild(ul);
     return sec;
-  }
-
-  function safetyBlock() {
-    var box = el('div', { class: 'dl-safety' });
-    box.appendChild(el('b', { text: t('safety') }));
-    box.appendChild(el('a', { class: 'dl-safety-script', href: I.BASE + '/assets/verify-download.ps1', download: 'verify-download.ps1', text: t('script') }));
-    box.appendChild(el('span', { class: 'dl-safety-note faint small', text: t('safeNote') }));
-    return box;
   }
 
   window.INFINITY = window.INFINITY || {};
