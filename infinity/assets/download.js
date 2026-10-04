@@ -91,8 +91,22 @@
     host.appendChild(box);
     box.appendChild(el('p', { class: 'dl-state', text: t('loading') }));
 
-    fetch(API + product.repo + '/releases?per_page=30', { headers: { Accept: 'application/vnd.github+json' } })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    /*
+     * assets/releases.json is written when the site is published, so the list
+     * is readable from this origin: no API quota, no proxy, no CORS. The live
+     * API is the fallback for a release published after this file was built.
+     */
+    fetch(I.BASE + '/assets/releases.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('static HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        var rels = data && data.repos && data.repos[product.repo];
+        if (rels && rels.length) return rels;
+        throw new Error('no static data for ' + product.repo);
+      })
+      .catch(function () {
+        return fetch(API + product.repo + '/releases?per_page=30', { headers: { Accept: 'application/vnd.github+json' } })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+      })
       .then(function (rels) { paint(box, product, rels); })
       .catch(function () {
         I.clear(box);
