@@ -70,7 +70,21 @@
       if (cred && cred.v === VERSION) remembered = true;
     }
   } catch (e) { remembered = false; }
-  state.mode = remembered ? 'remembered' : 'gate';
+
+  /*
+   * A reader moving between pages of this site keeps the page they asked for:
+   * the loading bar runs across the top and the UI underneath stays visible.
+   * Only a first arrival - a direct link, a bookmark, another site - gets the
+   * blank page, because there is no UI of its own to keep yet.
+   */
+  var internal = false;
+  try {
+    var ref = document.referrer || '';
+    if (ref && ref.indexOf(location.origin) === 0) internal = true;
+    if (sessionStorage.getItem('infinity.visited') === '1') internal = true;
+  } catch (e) { internal = false; }
+  state.internal = internal;
+  state.mode = internal ? 'internal' : (remembered ? 'remembered' : 'gate');
 
   // ---------------------------------------------------------------- overlay
   var started = now();
@@ -82,7 +96,7 @@
     return node;
   }
 
-  html.className = (html.className ? html.className + ' ' : '') + 'infinity-gate';
+  html.className = (html.className ? html.className + ' ' : '') + (internal ? 'infinity-nav' : 'infinity-gate');
 
   /*
    * One element only: the bar. The page behind it stays blank, because a
@@ -94,13 +108,14 @@
   overlay.setAttribute('aria-live', 'polite');
   var bar = el('div', 'bar');
   overlay.appendChild(bar);
-  try { overlay.style.setProperty('--ig-ms', (remembered ? SHORT_MS : MIN_MS) + 'ms'); } catch (e) { /* older engines */ }
+  try { overlay.style.setProperty('--ig-ms', ((internal || remembered) ? SHORT_MS : MIN_MS) + 'ms'); } catch (e) { /* older engines */ }
   html.appendChild(overlay);
 
   function clearGateClass() {
     html.className = html.className.split(/\s+/).filter(function (c) {
-      return c && c !== 'infinity-gate';
+      return c && c !== 'infinity-gate' && c !== 'infinity-nav';
     }).join(' ');
+    try { sessionStorage.setItem('infinity.visited', '1'); } catch (e) { /* private mode */ }
   }
 
   function reveal() {
@@ -135,6 +150,12 @@
     state.result = 'timeout';
     state.reason = reason || 'failed';
     try { location.replace(FAIL_URL); } catch (e) { window.location.href = FAIL_URL; }
+  }
+
+  if (internal) {
+    /* The bar is shown for its own moment and the page is never held back. */
+    setTimeout(reveal, SHORT_MS);
+    return;
   }
 
   if (remembered) {

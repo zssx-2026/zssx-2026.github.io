@@ -12,6 +12,13 @@
 
 html.infinity-gate,
 html.infinity-gate body { visibility: hidden !important; }
+
+/*
+ * Moving between pages: the UI is the reader's page, so it stays. Only the
+ * bar is added, and it is gone in a moment.
+ */
+html.infinity-nav body { visibility: visible !important; }
+html.infinity-nav { background: transparent !important; }
 html.infinity-gate { background: #000 !important; }
 @media (prefers-color-scheme: light) { html.infinity-gate { background: #fff !important; } }
 
