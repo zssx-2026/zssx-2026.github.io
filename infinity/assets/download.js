@@ -1,15 +1,23 @@
 /*
  * Infinity.Inc - the version list on a product's own download page.
  *
- * The page used to be one card that linked away, which meant it never listed
- * what can actually be downloaded. This renders the product's own releases:
- * a platform switch at the top, then one collapsed row per version that
- * opens into its files grouped by kind (setup / port).
+ * One collapsed row per version, a platform switch above it, and files
+ * grouped by what they are: the exe installer, the Windows msi, the portable
+ * zip, the source zip and the source zst.
  *
- * The releases come from the GitHub API for the product's own repository, so
- * the list follows the repository instead of a copy kept in this file. When
- * the API is rate limited or offline the page falls back to the plain link,
- * which still works.
+ * Only releases from the last year are listed; everything older is kept on
+ * /infinity/versions/archive/, where each platform has one .zst holding all of
+ * its files for that release, so an old version is still reachable without a
+ * page that grows forever.
+ *
+ * Each file carries the SHA-256 the release published, so "the file is not
+ * safe" can be answered with evidence rather than with a promise, and
+ * assets/verify-download.ps1 checks that digest and clears the mark Windows
+ * puts on a downloaded file.
+ *
+ * The list comes from assets/releases.json, written when the site is
+ * published, so it needs no API quota, no proxy and no CORS; the live API is
+ * the fallback for a release published after that file was built.
  */
 (function () {
   'use strict';
@@ -19,38 +27,62 @@
   var PLATFORM_KEY = 'inc.download.platform';
   var PRE_KEY = 'inc.download.pre';
   var SHOW_PRE = localStorage.getItem(PRE_KEY) !== '0';
+  var YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+
+  var PLATFORM_SHORT = {
+    win16: 'Win16', win32: 'Win32', win64: 'Win64', winx86: 'WinX86', winarm: 'WinARM',
+    linux16: 'Linux16', linux32: 'Linux32', linux64: 'Linux64', linuxx86: 'LinuxX86',
+    mac16: 'Mac16', mac32: 'Mac32', mac64: 'Mac64', macx86: 'MacX86'
+  };
+  var PLATFORM_ORDER = ['win64', 'win32', 'win16', 'winx86', 'winarm',
+    'linux64', 'linux32', 'linux16', 'linuxx86', 'mac64', 'mac32', 'mac16', 'macx86'];
+  var ALIAS = {
+    'win-x86': 'winx86', 'win-x64': 'win64', x64: 'win64', x86: 'winx86',
+    'win-arm64': 'winarm', 'win-arm': 'winarm', arm64: 'winarm', arm: 'winarm',
+    'linux-x86': 'linuxx86', 'linux-x64': 'linux64',
+    'mac-x86': 'macx86', 'mac-x64': 'mac64', osx64: 'mac64', darwin64: 'mac64',
+    amd64: 'win64', i386: 'winx86', i686: 'winx86'
+  };
+  var TOKEN = '(win16|win32|win64|winx86|win-x86|win-x64|x64|x86|win-arm64|win-arm|winarm|arm64|arm|amd64|i386|i686|linux16|linux32|linux64|linuxx86|linux-x86|linux-x64|linux-arm64|mac16|mac32|mac64|macx86|mac-x86|mac-x64|osx64|darwin64)';
 
   var TEXT = {
     en: {
-      platform: 'Platform', versions: 'Versions', files: 'files', file: 'file',
-      kindSetup: 'Installer', kindPort: 'Portable', other: 'Other files',
-      showPre: 'Show pre-releases', openRelease: 'Open the release page',
-      loading: 'Loading versions…', noAssets: 'No files for this platform in this version.',
-      noReleases: 'No release is published yet.', failed: 'The version list is unavailable right now.',
-      pre: 'pre-release', latest: 'latest', size: 'Size', published: 'Published',
-      all: 'all platforms', noneForPlatform: 'This platform has no files in any published version.'
+      platform: 'Platform', loading: 'Loading versions…', showPre: 'Show pre-releases',
+      openRelease: 'Open the release page', failed: 'The version list is unavailable right now.',
+      noReleases: 'No release is published yet.', noAssets: 'No files for this platform in this version.',
+      pre: 'pre-release', latest: 'latest', files: 'files', file: 'file', recent: 'Released in the last year',
+      archive: 'Older releases are in the archive', archiveLink: 'Open the archive',
+      kindSetup: 'Installer (exe)', kindMsi: 'Windows msi', kindPort: 'Portable (zip)',
+      kindSrcZip: 'Source code (zip)', kindSrcZst: 'Source code (zst)', kindOther: 'Other files',
+      safety: 'SHA-256 published', script: 'Verify script',
+      safeNote: 'If Windows says the file is unsafe, verify the digest and clear the mark with this script (it runs Unblock-File).'
     },
     zh: {
-      platform: '平台', versions: '版本', files: '个文件', file: '个文件',
-      kindSetup: '安装包', kindPort: '便携版', other: '其它文件',
-      showPre: '显示预发布版本', openRelease: '打开该版本的 Release 页',
-      loading: '正在加载版本…', noAssets: '该版本在此平台下没有文件。',
-      noReleases: '还没有发布任何版本。', failed: '暂时无法获取版本列表。',
-      pre: '预发布', latest: '最新', size: '大小', published: '发布时间',
-      all: '全部平台', noneForPlatform: '该平台在任何已发布版本里都没有文件。'
+      platform: '平台', loading: '正在加载版本…', showPre: '显示预发布版本',
+      openRelease: '打开该版本的 Release 页', failed: '暂时无法获取版本列表。',
+      noReleases: '还没有发布任何版本。', noAssets: '该版本在此平台下没有文件。',
+      pre: '预发布', latest: '最新', files: '个文件', file: '个文件', recent: '一年内发布的版本',
+      archive: '更早的版本在归档里', archiveLink: '打开归档',
+      kindSetup: 'exe 安装包', kindMsi: 'Windows msi', kindPort: '便携版 zip',
+      kindSrcZip: '源代码 zip', kindSrcZst: '源代码 zst', kindOther: '其它文件',
+      safety: '已公布 SHA-256', script: '校验脚本',
+      safeNote: '若 Windows 提示“文件不安全”，用校验脚本核对摘要并解除锁定（脚本会执行 Unblock-File）。'
     }
   };
+
+  var ORDER = ['setup', 'msi', 'port', 'srczip', 'srczst', 'other'];
+  var KIND_LABEL = { setup: 'kindSetup', msi: 'kindMsi', port: 'kindPort', srczip: 'kindSrcZip', srczst: 'kindSrcZst', other: 'kindOther' };
 
   function lang() {
     var l = (document.documentElement.getAttribute('lang') || 'en').toLowerCase();
     return l.indexOf('zh') === 0 ? 'zh' : 'en';
   }
   function t(k) { return TEXT[lang()][k] || k; }
+  function el(tag, attrs, kids) { return I.el(tag, attrs, kids); }
 
   function bytes(n) {
     if (!n && n !== 0) return '';
-    var u = ['B', 'KB', 'MB', 'GB'];
-    var i = 0;
+    var u = ['B', 'KB', 'MB', 'GB'], i = 0;
     while (n >= 1024 && i < u.length - 1) { n = n / 1024; i++; }
     return (i === 0 ? n : n.toFixed(n < 10 ? 1 : 0)) + ' ' + u[i];
   }
@@ -59,43 +91,59 @@
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     var p = function (x) { return (x < 10 ? '0' : '') + x; };
-    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate());
   }
-
-  /*
-   * Assets are named <Product>_<version>_<platform>_<kind>.<ext> now, and
-   * <Product>_<platform>_<kind>.<ext> in the first releases. Both are read,
-   * and the hash sidecars that sit next to an asset are not files to offer.
-   */
-  var PLATFORMS = /^(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)$/i;
-  function normalisePlatform(p) { return p.toLowerCase().replace(/^win-/, ''); }
+  function shortPlatform(code) { return PLATFORM_SHORT[code] || code; }
+  function fold(token) {
+    var k = String(token || '').toLowerCase();
+    if (ALIAS[k]) return ALIAS[k];
+    return PLATFORM_SHORT[k] ? k : null;
+  }
+  /* The last year only, counted from UTC now. */
+  function isRecent(release) {
+    var at = Date.parse(release.published_at || release.created_at || '');
+    if (!at) return true;
+    return (Date.now() - at) <= YEAR_MS;
+  }
+  function archiveHref() {
+    if (I.page) return I.page('/versions/archive/');
+    return String(I.BASE || '').replace(/\/assets.*$/, '') + '/versions/archive/';
+  }
 
   function parseAsset(name) {
     if (/_hash\.txt$|\.hash(es)?$/i.test(name)) return null;
-    var base = name.replace(/\.(exe|msi|zip|7z|tar\.gz|dmg|deb|appimage)$/i, '');
-    var versioned = /^(.+?)_([0-9][^_]*)_(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)_([a-z0-9-]+)$/i.exec(base);
-    if (versioned) {
-      return { name: name, version: versioned[2], platform: normalisePlatform(versioned[3]), kind: versioned[4].toLowerCase() };
-    }
-    var legacy = /^(.+?)_(win64|win32|x86|x64|arm64|win-arm64|win-x64|win-x86)(?:_([a-z0-9-]+))?$/i.exec(base);
-    if (legacy) {
-      return { name: name, version: '', platform: normalisePlatform(legacy[2]), kind: (legacy[3] || 'other').toLowerCase() };
-    }
-    return null;
+    var lower = name.toLowerCase();
+    var base = name.replace(/\.(exe|msi|zip|7z|zst|tar\.gz|tar\.xz|dmg|deb|appimage)$/i, '');
+    var versioned = new RegExp('^(.+?)_([0-9][^_]*)_' + TOKEN + '_([a-z0-9-]+)$', 'i').exec(base);
+    var legacy = versioned ? null : new RegExp('^(.+?)_' + TOKEN + '(?:_([a-z0-9-]+))?$', 'i').exec(base);
+    var m = versioned || legacy;
+    if (!m) return null;
+    var platform = fold(versioned ? m[3] : m[2]);
+    if (!platform) return null;
+    return {
+      name: name, version: versioned ? m[2] : '', platform: platform,
+      ext: (/\.([a-z0-9]+)$/i.exec(lower) || [, ''])[1],
+      isSource: /(^|[_-])(source|sourcecode|src)([_-]|$)/.test(lower)
+    };
   }
 
-  function el(tag, attrs, kids) { return I.el(tag, attrs, kids); }
+  /* The five categories the download page offers. */
+  function categoryOf(parsed) {
+    if (!parsed) return 'other';
+    var ext = parsed.ext;
+    if (ext === 'zst') return 'srczst';
+    if (parsed.isSource) return ext === 'zip' ? 'srczip' : 'src' + ext;
+    if (ext === 'exe') return 'setup';
+    if (ext === 'msi') return 'msi';
+    if (ext === 'zip') return 'port';
+    return 'other';
+  }
 
   function render(host, product) {
     var box = el('section', { class: 'dl' });
     host.appendChild(box);
     box.appendChild(el('p', { class: 'dl-state', text: t('loading') }));
 
-    /*
-     * assets/releases.json is written when the site is published, so the list
-     * is readable from this origin: no API quota, no proxy, no CORS. The live
-     * API is the fallback for a release published after this file was built.
-     */
     fetch(I.BASE + '/assets/releases.json', { cache: 'no-cache' })
       .then(function (r) { if (!r.ok) throw new Error('static HTTP ' + r.status); return r.json(); })
       .then(function (data) {
@@ -111,10 +159,22 @@
       .catch(function () {
         I.clear(box);
         box.appendChild(el('p', { class: 'dl-state', text: t('failed') }));
-        var card = el('div', { class: 'grid' });
-        card.appendChild(I.productCard(product));
-        box.appendChild(card);
+        var grid = el('div', { class: 'grid' });
+        grid.appendChild(I.productCard(product));
+        box.appendChild(grid);
       });
+  }
+
+  function platformsIn(releases) {
+    var present = [];
+    releases.forEach(function (r) {
+      (r.assets || []).forEach(function (a) {
+        var p = parseAsset(a.name);
+        if (p && present.indexOf(p.platform) < 0) present.push(p.platform);
+      });
+    });
+    present.sort(function (a, b) { return PLATFORM_ORDER.indexOf(a) - PLATFORM_ORDER.indexOf(b); });
+    return present;
   }
 
   function paint(box, product, releases) {
@@ -123,28 +183,25 @@
       box.appendChild(el('p', { class: 'dl-state', text: t('noReleases') }));
       return;
     }
+    var recent = releases.filter(isRecent);
+    var older = releases.filter(function (r) { return !isRecent(r); });
+    if (!recent.length && releases.length) { recent = releases.slice(); older = []; }
 
-    var platforms = [];
-    releases.forEach(function (r) {
-      (r.assets || []).forEach(function (a) {
-        var p = parseAsset(a.name);
-        if (p && platforms.indexOf(p.platform) < 0) platforms.push(p.platform);
-      });
-    });
-    platforms.sort(function (a, b) { return a === 'win64' ? -1 : b === 'win64' ? 1 : a < b ? -1 : 1; });
+    var present = platformsIn(recent);
+    if (!present.length) present = platformsIn(releases);
 
     var chosen = localStorage.getItem(PLATFORM_KEY);
-    if (!chosen || platforms.indexOf(chosen) < 0) chosen = platforms[0] || 'win64';
+    if (!chosen || present.indexOf(chosen) < 0) chosen = present[0] || 'win64';
 
     var bar = el('div', { class: 'dl-bar' });
     var seg = el('div', { class: 'dl-seg', role: 'tablist', 'aria-label': t('platform') });
-    platforms.forEach(function (p) {
-      var b = el('button', { type: 'button', class: 'dl-seg-btn' + (p === chosen ? ' is-on' : ''), text: p });
+    present.forEach(function (p) {
+      var b = el('button', { type: 'button', class: 'dl-seg-btn' + (p === chosen ? ' is-on' : ''), title: p, text: shortPlatform(p) });
       b.addEventListener('click', function () {
         localStorage.setItem(PLATFORM_KEY, p);
         chosen = p;
         Array.prototype.forEach.call(seg.children, function (c) { c.classList.toggle('is-on', c === b); });
-        paintVersions(list, releases, chosen);
+        paintVersions(list, recent, chosen);
       });
       seg.appendChild(b);
     });
@@ -156,19 +213,24 @@
     pre.addEventListener('change', function () {
       SHOW_PRE = pre.checked;
       localStorage.setItem(PRE_KEY, SHOW_PRE ? '1' : '0');
-      paintVersions(list, releases, chosen);
+      paintVersions(list, recent, chosen);
     });
     preWrap.appendChild(pre);
     preWrap.appendChild(el('span', { text: t('showPre') }));
     bar.appendChild(preWrap);
-
-    var releaseLink = el('a', { class: 'dl-openrel', href: I.productHref(product), text: t('openRelease') });
-    bar.appendChild(releaseLink);
+    bar.appendChild(el('a', { class: 'dl-openrel', href: I.productHref(product), text: t('openRelease') }));
     box.appendChild(bar);
 
     var list = el('div', { class: 'dl-list' });
     box.appendChild(list);
-    paintVersions(list, releases, chosen);
+    paintVersions(list, recent, chosen);
+
+    if (older.length) {
+      var note = el('div', { class: 'dl-archive' });
+      note.appendChild(el('span', { text: t('archive') + ' (' + older.length + ')' }));
+      note.appendChild(el('a', { href: archiveHref(), text: t('archiveLink') + ' \u2192' }));
+      box.appendChild(note);
+    }
   }
 
   function paintVersions(host, releases, platform) {
@@ -177,52 +239,51 @@
     if (!shown.length) shown = releases.slice(0, 1);
 
     shown.forEach(function (r, idx) {
-      var assets = (r.assets || []).map(function (a) { return { raw: a, p: parseAsset(a.name) }; })
-        .filter(function (x) { return x.p && x.p.platform === platform; });
+      var assets = (r.assets || []).map(function (a) {
+        var p = parseAsset(a.name);
+        return p && p.platform === platform ? { raw: a, p: p, kind: categoryOf(p) } : null;
+      }).filter(Boolean);
 
       var byKind = {};
-      assets.forEach(function (x) { (byKind[x.p.kind] = byKind[x.p.kind] || []).push(x); });
+      assets.forEach(function (x) { (byKind[x.kind] = byKind[x.kind] || []).push(x); });
       var total = assets.reduce(function (n, x) { return n + (x.raw.size || 0); }, 0);
 
       var d = el('details', { class: 'dl-ver' });
-      /* collapsed by default; ?expand=1 opens every version (used for tests) */
       if (assets.length && /(^|[?&])expand=1(&|$)/.test(location.search)) d.setAttribute('open', '');
       var sum = el('summary', { class: 'dl-sum' });
       sum.appendChild(el('span', { class: 'dl-ver-tag', text: r.tag_name || r.name }));
       if (r.prerelease) sum.appendChild(el('span', { class: 'pill dl-pill-pre', text: t('pre') }));
       if (idx === 0) sum.appendChild(el('span', { class: 'pill dl-pill-latest', text: t('latest') }));
       sum.appendChild(el('span', { class: 'dl-date', text: when(r.published_at) }));
-      sum.appendChild(el('span', { class: 'dl-meta', text: assets.length + ' ' + (assets.length === 1 ? t('file') : t('files')) + ' · ' + bytes(total) + ' · ' + platform }));
+      sum.appendChild(el('span', { class: 'dl-meta', text: assets.length + ' ' + (assets.length === 1 ? t('file') : t('files')) + ' \u00b7 ' + bytes(total) + ' \u00b7 ' + shortPlatform(platform) }));
       d.appendChild(sum);
 
       var body = el('div', { class: 'dl-body' });
       if (!assets.length) {
         body.appendChild(el('p', { class: 'dl-state', text: t('noAssets') }));
       } else {
-        ['setup', 'port'].forEach(function (kind) {
-          if (!byKind[kind]) return;
-          body.appendChild(kindBlock(kind, byKind[kind]));
-        });
+        ORDER.forEach(function (kind) { if (byKind[kind]) body.appendChild(kindBlock(kind, byKind[kind])); });
         Object.keys(byKind).forEach(function (kind) {
-          if (kind !== 'setup' && kind !== 'port') body.appendChild(kindBlock(kind, byKind[kind]));
+          if (ORDER.indexOf(kind) < 0) body.appendChild(kindBlock(kind, byKind[kind]));
         });
+        body.appendChild(safetyBlock());
       }
-      var rel = el('a', { class: 'dl-openrel', href: r.html_url, text: t('openRelease') });
-      body.appendChild(rel);
+      body.appendChild(el('a', { class: 'dl-openrel', href: r.html_url, text: t('openRelease') }));
       d.appendChild(body);
       host.appendChild(d);
     });
   }
 
   function kindBlock(kind, items) {
-    var label = kind === 'setup' ? t('kindSetup') : kind === 'port' ? t('kindPort') : (t('other') + ' · ' + kind);
     var sec = el('section', { class: 'dl-kind' });
-    sec.appendChild(el('h4', { class: 'dl-kind-name', text: label }));
+    sec.appendChild(el('h4', { class: 'dl-kind-name', text: t(KIND_LABEL[kind] || 'kindOther') }));
     var ul = el('ul', { class: 'dl-files' });
     items.forEach(function (x) {
       var li = el('li', { class: 'dl-file' });
       li.appendChild(el('a', { class: 'dl-file-name', href: x.raw.browser_download_url, text: x.raw.name }));
       li.appendChild(el('span', { class: 'dl-file-size', text: bytes(x.raw.size) }));
+      var digest = x.raw.digest || '';
+      if (digest) li.appendChild(el('span', { class: 'dl-digest', title: digest, text: 'sha256:' + digest.replace(/^sha256:/i, '').slice(0, 12) + '\u2026' }));
       li.appendChild(el('span', { class: 'dl-file-date', text: when(x.raw.created_at) }));
       ul.appendChild(li);
     });
@@ -230,6 +291,18 @@
     return sec;
   }
 
+  function safetyBlock() {
+    var box = el('div', { class: 'dl-safety' });
+    box.appendChild(el('b', { text: t('safety') }));
+    box.appendChild(el('a', { class: 'dl-safety-script', href: I.BASE + '/assets/verify-download.ps1', download: 'verify-download.ps1', text: t('script') }));
+    box.appendChild(el('span', { class: 'dl-safety-note faint small', text: t('safeNote') }));
+    return box;
+  }
+
   window.INFINITY = window.INFINITY || {};
-  window.INFINITY.download = { render: render, parseAsset: parseAsset };
+  window.INFINITY.download = {
+    render: render, parseAsset: parseAsset, categoryOf: categoryOf,
+    shortPlatform: shortPlatform, fold: fold, isRecent: isRecent,
+    platformsIn: platformsIn, archiveHref: archiveHref
+  };
 })();

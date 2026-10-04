@@ -84,21 +84,16 @@
 
   html.className = (html.className ? html.className + ' ' : '') + 'infinity-gate';
 
+  /*
+   * One element only: the bar. The page behind it stays blank, because a
+   * loading screen with content on it is a screen that has already loaded.
+   */
   var overlay = el('div');
   overlay.id = 'infinity-gate';
   overlay.setAttribute('role', 'status');
   overlay.setAttribute('aria-live', 'polite');
-  var box = el('div', 'box');
-  var brand = el('div', 'brand');
-  brand.appendChild(el('span', 'dot'));
-  brand.appendChild(document.createTextNode('Infinity.Inc'));
   var bar = el('div', 'bar');
-  bar.appendChild(el('i'));
-  box.appendChild(brand);
-  box.appendChild(el('div', 'spinner'));
-  box.appendChild(el('div', 'text', T.loading));
-  box.appendChild(bar);
-  overlay.appendChild(box);
+  overlay.appendChild(bar);
   try { overlay.style.setProperty('--ig-ms', (remembered ? SHORT_MS : MIN_MS) + 'ms'); } catch (e) { /* older engines */ }
   html.appendChild(overlay);
 
@@ -126,14 +121,12 @@
     }
   }
 
-  var TIMEOUT_CSS = '<style>' +
-    'html,body{margin:0;background:#0b0d12;color:#e6e9f0;}' +
-    'body{font:15px/1.6 "Segoe UI",system-ui,-apple-system,"Noto Sans SC",sans-serif;}' +
-    '.ig-timeout{min-height:100vh;display:flex;align-items:center;justify-content:center;}' +
-    '.ig-timeout .box{max-width:520px;padding:0 24px;}' +
-    '.ig-timeout h1{font-size:22px;font-weight:600;margin:0 0 10px;}' +
-    '.ig-timeout p{margin:0;color:#98a0b3;}' +
-    '</style>';
+  /*
+   * Failure is not a page of its own any more. An error screen is a screen
+   * that can be studied, and the requirement is a plain 404: the document is
+   * replaced by the site's 404 handler and nothing else is shown.
+   */
+  var FAIL_URL = 'https://zssx-2026.github.io/404';
 
   function showTimeout(reason) {
     if (state.revealedAt) return;
@@ -141,13 +134,7 @@
     state.elapsedMs = Math.round(now() - started);
     state.result = 'timeout';
     state.reason = reason || 'failed';
-    html.className = 'ig-timed-out';
-    html.innerHTML =
-      '<head><meta charset="utf-8">' +
-      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-      '<title>' + T.title + '</title>' + TIMEOUT_CSS + '</head>' +
-      '<body><div class="ig-timeout"><div class="box"><h1>' + T.title + '</h1>' +
-      '<p>' + T.line + '</p></div></div></body>';
+    try { location.replace(FAIL_URL); } catch (e) { window.location.href = FAIL_URL; }
   }
 
   if (remembered) {

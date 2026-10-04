@@ -234,9 +234,25 @@
       status(createStatus, S.rotated, false);
     });
     actions.appendChild(rot);
+    /*
+     * Deleting asks for a second click instead of opening the browser's own
+     * confirm box: a native dialog is the one piece of UI a page cannot style
+     * or translate, and it interrupts the reader for something a second click
+     * says just as clearly.
+     */
     var del = el('button', { class: 'btn ghost small', type: 'button', text: S.remove });
+    var armed = false;
+    var disarm = null;
     del.addEventListener('click', function () {
-      if (!window.confirm(S.removeAsk)) return;
+      if (!armed) {
+        armed = true;
+        del.textContent = (S.removeAsk || 'Delete?') + ' — ' + (document.documentElement.getAttribute('lang') || '').indexOf('zh') === 0 ? '再点一次' : 'click again';
+        del.classList.add('danger');
+        disarm = setTimeout(function () { armed = false; del.textContent = S.remove; del.classList.remove('danger'); }, 6000);
+        return;
+      }
+      armed = false;
+      if (disarm) clearTimeout(disarm);
       writeVault(readVault().filter(function (t) { return t.id !== token.id; }));
       delete revealed[token.id];
       list();

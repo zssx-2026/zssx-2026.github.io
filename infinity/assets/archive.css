@@ -1,0 +1,9 @@
+/* Infinity.Inc - the version archive. */
+.arc { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+.arc-title { margin: 0 0 .2rem; font-size: 1.25rem; }
+.arc-platform { border: 1px solid rgba(128,128,128,.3); border-radius: 12px; overflow: hidden; margin-top: .8rem; }
+.arc-row { display: flex; flex-wrap: wrap; gap: .7rem; align-items: baseline; padding: .45rem .6rem; border-radius: 8px; background: rgba(128,128,128,.08); margin-top: .35rem; }
+.arc-file { font-size: .85rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.arc-bundle { font-weight: 600; }
+@media (prefers-color-scheme: dark) { body { background: #000; } }
+@media (prefers-color-scheme: light) { body { background: #fff; } }

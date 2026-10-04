@@ -1,57 +1,39 @@
 /*
  * Infinity.Inc - the styles for the gate in front of the suite's entry pages.
  *
- * Kept apart from site.css because it has to be in place before the first
- * paint, while the page it guards is still a blank document. Nothing here is
- * interactive: the challenge runs in the background and the visitor only ever
- * sees a loading state.
+ * The visitor sees a blank page and a loading bar across the top of the
+ * window, the way a browser shows a page that is still arriving. There is no
+ * card, no spinner and no text in the middle: the page has no UI of its own
+ * until the gate opens, and the loading bar is the only thing on screen.
+ *
+ * The blank page is black in a dark colour scheme and white in a light one,
+ * so the gate matches the page it is about to reveal.
  */
 
+html.infinity-gate,
 html.infinity-gate body { visibility: hidden !important; }
+html.infinity-gate { background: #000 !important; }
+@media (prefers-color-scheme: light) { html.infinity-gate { background: #fff !important; } }
 
 #infinity-gate {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
   z-index: 2147483000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0b0d12;
-  color: #e6e9f0;
-  font: 15px/1.6 "Segoe UI", system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  background: transparent;
+  visibility: visible !important;
 }
-
-#infinity-gate.done { opacity: 0; transition: opacity .2s ease; }
-
-#infinity-gate .box { width: min(320px, 78vw); text-align: center; }
-
-#infinity-gate .brand { font-weight: 650; letter-spacing: -.01em; margin-bottom: 24px; color: #e6e9f0; }
-#infinity-gate .brand .dot {
-  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
-  background: #4c8dff; box-shadow: 0 0 10px #4c8dff; margin-right: 8px;
-}
-
-#infinity-gate .spinner {
-  width: 42px; height: 42px; margin: 0 auto 18px;
-  border: 3px solid #232838; border-top-color: #4c8dff; border-radius: 50%;
-  animation: ig-spin .9s linear infinite;
-}
-@keyframes ig-spin { to { transform: rotate(360deg); } }
-
-#infinity-gate .text { color: #98a0b3; font-size: 14px; }
 
 #infinity-gate .bar {
-  height: 4px; background: #1b1f2b; border-radius: 999px;
-  margin-top: 18px; overflow: hidden;
+  height: 100%;
+  width: 0;
+  background: #4c8dff;
+  animation: ig-bar var(--ig-ms, 3000ms) cubic-bezier(.1, .7, .3, 1) forwards;
 }
-#infinity-gate .bar i {
-  display: block; height: 100%; width: 0;
-  background: linear-gradient(90deg, #2f5fb0, #4c8dff);
-  animation: ig-bar var(--ig-ms, 3000ms) linear forwards;
-}
+
 @keyframes ig-bar { from { width: 0; } to { width: 100%; } }
 
-@media (prefers-reduced-motion: reduce) {
-  #infinity-gate .spinner { animation-duration: 2.4s; }
-  #infinity-gate .bar i { animation-duration: 1ms; width: 100%; }
-}
+@media (prefers-color-scheme: light) { #infinity-gate .bar { background: #0969da; } }
+@media (prefers-reduced-motion: reduce) { #infinity-gate .bar { animation-duration: 1ms; width: 100%; } }

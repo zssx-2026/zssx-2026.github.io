@@ -1,0 +1,57 @@
+/*
+ * Infinity.Inc - the token page's own styles.
+ *
+ * Kept out of site.css so the vault's list, its masked secret and the code
+ * samples carry their own look without adding rules every other page has to
+ * live with. Colours come from the variables site.css already defines.
+ */
+
+.token-field { display: block; margin: 0 0 12px; }
+.token-field span { display: block; margin-bottom: 6px; font-size: 13px; color: var(--ink-dim); }
+
+.token-input {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+.token-input:focus { outline: none; border-color: var(--accent); }
+
+.token-checks { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; }
+.token-check { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink-dim); cursor: pointer; }
+
+.token-status { min-height: 20px; margin-top: 10px; font-size: 13px; color: var(--ink-dim); }
+.token-status.bad { color: var(--bad); }
+
+.token-item { margin-bottom: 12px; }
+.token-item:last-child { margin-bottom: 0; }
+.token-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.token-head b { font-size: 15px; }
+
+.token-secret {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-hover);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.token-meta { margin-top: 10px; font-size: 12px; color: var(--ink-faint); line-height: 1.7; }
+.token-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.token-code + .token-code { margin-top: 14px; }
+.token-code h4 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink-dim); }
+
+@media (max-width: 560px) {
+  .token-secret { font-size: 12px; }
+  .token-checks { gap: 10px; }
+}
