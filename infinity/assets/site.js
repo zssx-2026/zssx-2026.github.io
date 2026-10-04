@@ -868,6 +868,15 @@
    * that changes.
    */
   function productHref(p) {
+    /*
+     * On the download index the card opens the product's own download page,
+     * which lists every version and platform. Anywhere else it opens the
+     * release itself, the one link that cannot go stale.
+     */
+    var here = location.pathname.replace(/\/+$/, '');
+    if (/(^|\/)download$/.test(here) || /(^|\/)download\/index\.html$/.test(here)) {
+      return page('/download/' + p.slug + '/');
+    }
     return 'https://github.com/zssx-2026/' + p.repo + '/releases/tag/' + RELEASE_TAG;
   }
 
