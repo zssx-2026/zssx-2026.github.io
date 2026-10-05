@@ -1,0 +1,15 @@
+/* Account pages: the pieces site.css does not already provide. */
+.acct-card { margin: 18px 0; }
+.acct-card h3 { margin-top: 0; }
+.acct-card hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+.acct-qr { display: block; margin: 14px 0; background: #fff; border: 1px solid var(--line); border-radius: 8px; image-rendering: pixelated; max-width: 100%; height: auto; }
+.acct-codes { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; margin: 10px 0; padding-left: 18px; }
+.acct-codes code { font-family: var(--mono); }
+.acct-code { margin: 10px 0; }
+.acct-sig { margin-left: 10px; color: var(--ink-faint); font-family: var(--mono); font-size: 12px; }
+.acct-bad { color: var(--bad); }
+.acct-file { display: none; }
+.acct-field-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+#acct-trust { font-weight: 600; }
+#acct-status, #acct-panel-status { min-height: 18px; }
+@media (max-width: 620px) { .acct-codes { grid-template-columns: 1fr; } }

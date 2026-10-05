@@ -4,102 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>登录 — Infinity.Inc</title>
-<meta name="description" content="本站没有自己的账号。登录就是把一个 GitHub 个人访问令牌交给它，由它保存在这个浏览器里。">
-<link rel="stylesheet" href="../../assets/site.css">
-<script src="../../assets/guard.js"></script>
+<meta name="description" content="用口令解锁存在本浏览器里的 Infinity.Inc 账户；启用 2FA 时再输入离线 TOTP 验证码或一次性恢复码。">
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../../assets/account.css">
+<script src="../../../assets/guard.js"></script>
   <link rel="stylesheet" href="/infinity/assets/verify.css">
   <script src="/infinity/assets/verify.js"></script>
 </head>
-<body>
-<main id="app" style="max-width:520px">
-  <h1 data-t="signIn"></h1>
-  <p class="lede" data-t="loginLede"></p>
-
-  <div class="card" id="form">
-    <div class="field">
-      <label for="token" data-t="token"></label>
-      <input type="password" id="token" autocomplete="off" spellcheck="false"
-             placeholder="github_pat_… or ghp_…">
-      <p class="small faint" style="margin:6px 0 0" data-t="tokenHelp"></p>
-    </div>
-    <div class="row">
-      <button class="btn" id="go" data-t="signIn"></button>
-      <a class="btn ghost" href="https://github.com/settings/tokens" target="_blank" rel="noopener"
-         data-t="createToken"></a>
-    </div>
-    <div id="result" style="margin-top:14px"></div>
-  </div>
-
-  <div class="card">
-    <h3 data-t="tokenScopeTitle"></h3>
-    <p class="muted small" data-t="tokenScopeText"></p>
-    <p class="muted small" data-t="tokenPasswordText"></p>
-  </div>
+<body data-account-page="login">
+<main id="app" style="max-width:860px">
+  <div id="body"></div>
 </main>
 
-<script src="../../assets/site.js"></script>
-<script>
-(function () {
-  var I = window.INFINITY;
-  I.applyTranslations();
-  I.nav('/login/');
-  I.footer();
-
-  var input = document.getElementById('token');
-  var button = document.getElementById('go');
-  var result = document.getElementById('result');
-
-  function next() {
-    var params = new URLSearchParams(location.search);
-    return params.get('next') || I.page('/myself/');
-  }
-
-  function fail(message) {
-    I.clear(result);
-    result.appendChild(I.el('div', { class: 'note bad', text: message }));
-  }
-
-  function attempt() {
-    var value = input.value.trim();
-    if (!value) { fail(I.t('pasteFirst')); return; }
-
-    I.setToken(value);
-    I.clear(result);
-    result.appendChild(I.el('div', { class: 'note' }, [
-      I.el('span', { class: 'spinner' }), ' ' + I.t('checkingToken')
-    ]));
-
-    I.verify().then(function (user) {
-      if (!user) throw new Error(I.t('noAccountForToken'));
-      I.clear(result);
-      result.appendChild(I.el('div', { class: 'note', text:
-        I.t('signedInAs') + ' ' + user.login + '。' + I.t('redirecting') }));
-      location.replace(next());
-    }).catch(function (e) {
-      // A token that does not work is removed again: leaving it behind means
-      // the next page looks signed in and fails in a more confusing way.
-      I.signOut();
-      fail(e.status === 401
-        ? I.t('tokenRejected')
-        : I.t('verifyFailed') + ' ' + e.message);
-    });
-  }
-
-  button.addEventListener('click', attempt);
-  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') attempt(); });
-
-  if (I.token()) {
-    I.verify().then(function (user) {
-      if (user) {
-        I.clear(result);
-        result.appendChild(I.el('div', { class: 'note' }, [
-          I.t('alreadySignedIn') + ' ' + user.login + '。',
-          I.link(next(), I.t('continueLink'))
-        ]));
-      }
-    }).catch(function () { I.signOut(); });
-  }
-})();
-</script>
+<script src="../../../assets/site.js"></script>
+<script src="../../../assets/account.js"></script>
 </body>
 </html>

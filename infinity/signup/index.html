@@ -3,64 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign up — Infinity.Inc</title>
-<link rel="stylesheet" href="../assets/site.css">
-<script src="../assets/guard.js"></script>
+<title>Create an account — Infinity.Inc</title>
+<meta name="description" content="Create the Infinity.Inc account kept in this browser: an encrypted local profile, email verification through GitHub or a signed self-attestation, and offline two-factor authentication.">
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/account.css">
+<script src="../../assets/guard.js"></script>
   <link rel="stylesheet" href="/infinity/assets/verify.css">
   <script src="/infinity/assets/verify.js"></script>
 </head>
-<body>
-<main id="app" style="max-width:560px">
-  <h1>Sign up</h1>
-  <p class="lede">There is nothing to register here, and that is deliberate. The suite has no
-  accounts, no server and no database of users — it stores everything in your own GitHub
-  account. Signing up means having a GitHub account and a token for it.</p>
-
-  <div class="card">
-    <h3>1. A GitHub account</h3>
-    <p class="muted">If you already have one, skip this. If not, create it at
-    <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>.
-    The free tier is enough; the suite stores its data in releases, which are free on public
-    repositories and available on private ones too.</p>
-    <a class="btn ghost" href="https://github.com/signup" target="_blank" rel="noopener">
-      Create a GitHub account</a>
-  </div>
-
-  <div class="card">
-    <h3>2. A token</h3>
-    <p class="muted">A token is how a program acts as you without your password. Create one at
-    <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">
-    github.com/settings/tokens</a>.</p>
-    <p class="muted small">A classic token needs the <code>repo</code> scope. A fine-grained
-    token needs read and write access to <em>Contents</em> on the repositories you want to use.
-    Give it an expiry you are comfortable with — the suite reads the token from an environment
-    variable, so replacing it later is one setting, not a reinstall.</p>
-    <a class="btn ghost" href="https://github.com/settings/tokens" target="_blank" rel="noopener">
-      Create a token</a>
-  </div>
-
-  <div class="card">
-    <h3>3. Hand it over</h3>
-    <p class="muted">For this website, paste it on the <a href="../login/">sign in</a> page. For a
-    desktop program, set the environment variable it reads — the
-    <a href="../docs/#user">documentation</a> names it — or use the
-    <a href="../login/link/">link a product</a> page.</p>
-    <div class="row">
-      <a class="btn" href="../login/">Sign in</a>
-      <a class="btn ghost" href="../download/">Download the suite</a>
-    </div>
-  </div>
-
-
+<body data-account-page="signup">
+<main id="app" style="max-width:860px">
+  <div id="body"></div>
 </main>
 
-<script src="../assets/site.js"></script>
-<script>
-(function () {
-  var I = window.INFINITY;
-  I.nav('/signup/');
-  I.footer();
-})();
-</script>
+<script src="../../assets/site.js"></script>
+<script src="../../assets/account.js"></script>
 </body>
 </html>

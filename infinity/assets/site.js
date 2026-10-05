@@ -523,6 +523,7 @@
   }
 
   function link(href, text, className) {
+    href = mirror(href);
     var node = el('a', { href: href, class: className || null, text: text });
     if (isExternal(href)) {
       node.setAttribute('target', '_blank');
@@ -560,6 +561,37 @@
    * bilingual as soon as both copies exist.
    */
   function inChinese() { return location.pathname.indexOf('/cn/') >= 0; }
+
+  /*
+   * Chinese pages hand the reader to the same repositories and the same release
+   * assets, on the host that is reachable from there. It is a plain URL swap in
+   * one place: nothing on the page names the mirror, and calls made for signing
+   * in (api.github.com) are deliberately left alone because they are an API
+   * conversation, not a link the reader follows.
+   */
+  var MIRROR_FROM = 'https://github.com/zssx-2026';
+  var MIRROR_TO = 'https://gitee.com/zssx2026';
+
+  function mirror(href) {
+    if (!href || !inChinese()) return href;
+    if (href.indexOf(MIRROR_FROM) !== 0) return href;
+    return MIRROR_TO + href.slice(MIRROR_FROM.length);
+  }
+
+  /*
+   * Links built by the download and archive modules go straight into the DOM,
+   * so after every render the anchors already on the page are swapped too.
+   */
+  function applyMirror(root) {
+    if (!inChinese()) return;
+    var nodes = (root || document).querySelectorAll('a[href],img[src],[data-href]');
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (n.hasAttribute('href')) n.setAttribute('href', mirror(n.getAttribute('href')));
+      if (n.hasAttribute('data-href')) n.setAttribute('data-href', mirror(n.getAttribute('data-href')));
+      if (n.hasAttribute('src')) n.setAttribute('src', mirror(n.getAttribute('src')));
+    }
+  }
 
   function otherLanguageHref() {
     var path = location.pathname;
@@ -877,7 +909,7 @@
     if (/(^|\/)download$/.test(here) || /(^|\/)download\/index\.html$/.test(here)) {
       return page('/download/' + p.slug + '/');
     }
-    return 'https://github.com/zssx-2026/' + p.repo + '/releases/tag/' + RELEASE_TAG;
+    return mirror('https://github.com/zssx-2026/' + p.repo + '/releases/tag/' + RELEASE_TAG);
   }
 
   function tagline(p) {
@@ -930,6 +962,8 @@
     t: t,
     lang: lang,
     inChinese: inChinese,
+    mirror: mirror,
+    applyMirror: applyMirror,
     otherLanguageHref: otherLanguageHref,
     fmtSize: fmtSize,
     fmtDate: fmtDate,
@@ -949,4 +983,17 @@
     user: function () { return user; },
     decodePayload: decodePayload
   };
+
+  /*
+   * Renders happen after load as well (the download table fills in when its
+   * data arrives), so keep re-applying on new nodes instead of only once.
+   */
+  (function watch() {
+    var run = function () { applyMirror(document); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+    if (window.MutationObserver) {
+      new MutationObserver(run).observe(document.documentElement, { childList: true, subtree: true });
+    }
+  })();
 })();
